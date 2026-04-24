@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Search — Kroger Analytics{% endblock %}
+{% block content %}
+<h1>Household Search</h1>
+<p class="subtitle">Search transactions by household number</p>
+
+<div class="card">
+  <form method="POST" action="/search" style="display:flex;gap:1rem;align-items:flex-end;">
+    <div class="form-group" style="margin:0;flex:1;">
+      <label>Household Number (HSHD_NUM)</label>
+      <input type="number" name="hshd_num" placeholder="e.g. 10" value="{{ hshd_num or '' }}" required>
+    </div>
+    <button type="submit" class="btn">Search →</button>
+  </form>
+</div>
+
+{% if hshd_num %}
+  <div class="card">
+    <h2>Results for HSHD #{{ hshd_num }}</h2>
+    {% if rows %}
+      <p style="color:var(--muted);font-size:0.8rem;margin-bottom:1rem;">{{ rows|length }} records found</p>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>HSHD Num</th><th>Basket Num</th><th>Date</th><th>Product Num</th>
+            <th>Department</th><th>Commodity</th><th>Spend</th><th>Units</th>
+            <th>Region</th><th>Week</th><th>Year</th>
+            <th>Loyalty</th><th>Age</th><th>Income</th>
+            <th>Composition</th><th>Size</th><th>Children</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><span class="badge">{{ r.hshd_num }}</span></td>
+            <td>{{ r.basket_num }}</td>
+            <td>{{ r.date }}</td>
+            <td>{{ r.product_num }}</td>
+            <td>{{ r.department or '—' }}</td>
+            <td>{{ r.commodity or '—' }}</td>
+            <td>${{ "%.2f"|format(r.spend or 0) }}</td>
+            <td>{{ r.units }}</td>
+            <td>{{ r.store_region or '—' }}</td>
+            <td>{{ r.week_num }}</td>
+            <td>{{ r.year }}</td>
+            <td>{{ r.loyalty_flag or '—' }}</td>
+            <td>{{ r.age_range or '—' }}</td>
+            <td>{{ r.income_range or '—' }}</td>
+            <td>{{ r.hshd_composition or '—' }}</td>
+            <td>{{ r.hshd_size or '—' }}</td>
+            <td>{{ r.children or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <p style="color:var(--muted);">No records found for HSHD #{{ hshd_num }}.</p>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

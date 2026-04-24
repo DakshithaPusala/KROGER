@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}ML Models — Kroger Analytics{% endblock %}
+{% block content %}
+<h1>Machine Learning Models</h1>
+<p class="subtitle">Basket Analysis (Random Forest) & Churn Prediction (Gradient Boosting)</p>
+
+<!-- ML Write-Up — Req 1 -->
+<div class="card">
+  <h2>ML Model Overview</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Linear Regression</div>
+      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
+        Predicts a continuous outcome (e.g., total spend) as a weighted sum of input features.
+        Simple, interpretable, and fast — but assumes a linear relationship between inputs and output.
+        Best used for CLV estimation when relationships are straightforward.
+      </p>
+    </div>
+    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#3b82f6;margin-bottom:0.5rem;">Random Forest</div>
+      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
+        An ensemble of decision trees that vote on the final prediction. Handles non-linear
+        patterns, mixed data types, and is robust to overfitting. Used here for basket analysis
+        to identify which product features drive purchasing combinations.
+      </p>
+    </div>
+    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#f59e0b;margin-bottom:0.5rem;">Gradient Boosting</div>
+      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
+        Builds trees sequentially, each correcting errors from the previous. Typically achieves
+        the highest accuracy among the three. Used here for churn prediction to identify
+        at-risk customers based on transaction history and loyalty behavior.
+      </p>
+    </div>
+  </div>
+  <p style="font-size:0.8rem;color:var(--muted);margin-top:1rem;">
+    <strong style="color:var(--text);">Selected for CLV:</strong> Random Forest — handles the mixed demographic and 
+    transaction features in this dataset without requiring feature scaling, and provides 
+    feature importance scores to explain which variables drive customer lifetime value.
+  </p>
+</div>
+
+<!-- Req 7: Basket Analysis -->
+<div class="card">
+  <h2>Req 7 — Basket Analysis (Random Forest)</h2>
+  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
+    Which product combinations are most commonly purchased together? How can they drive cross-selling?
+  </p>
+  {% if results.basket_importances %}
+    <div class="stat-grid">
+      {% for feat, val in results.basket_importances.items() %}
+      <div class="stat-card">
+        <div class="value">{{ val }}%</div>
+        <div class="label">{{ feat }} Importance</div>
+      </div>
+      {% endfor %}
+      <div class="stat-card">
+        <div class="value">{{ results.basket_score }}%</div>
+        <div class="label">Model R² Score</div>
+      </div>
+    </div>
+    {% if results.basket_chart %}
+      {{ results.basket_chart|safe }}
+    {% endif %}
+  {% else %}
+    <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
+    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+  {% endif %}
+</div>
+
+<!-- Req 8: Churn Prediction -->
+<div class="card">
+  <h2>Req 8 — Churn Prediction (Gradient Boosting)</h2>
+  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
+    Which customers are at risk of disengaging? How can retention strategies address this?
+  </p>
+  {% if results.churn_accuracy %}
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="value">{{ results.churn_accuracy }}%</div>
+        <div class="label">Model Accuracy</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:#ef4444;">{{ results.churn_count }}</div>
+        <div class="label">Churned Households</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{ results.total_hh }}</div>
+        <div class="label">Total Households</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:#f59e0b;">{{ results.churn_rate }}%</div>
+        <div class="label">Churn Rate</div>
+      </div>
+    </div>
+    {% if results.churn_chart %}
+      {{ results.churn_chart|safe }}
+    {% endif %}
+    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
+      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategy Recommendations</div>
+      <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
+        <li>Target non-loyalty households with >10 weeks of inactivity for re-engagement campaigns</li>
+        <li>Offer personalized discounts on their most purchased departments</li>
+        <li>Enroll at-risk customers in the loyalty program to increase retention</li>
+        <li>Use weekly spend patterns to time outreach during historically active weeks</li>
+      </ul>
+    </div>
+  {% else %}
+    <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
+    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+  {% endif %}
+</div>
+{% endblock %}

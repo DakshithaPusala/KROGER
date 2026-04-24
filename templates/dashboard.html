@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Kroger Analytics{% endblock %}
+{% block content %}
+<h1>Retail Analytics Dashboard</h1>
+<p class="subtitle">Exploring customer engagement, spending trends, and brand preferences</p>
+
+{% if charts %}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    {% if charts.spend_time %}
+    <div class="card" style="grid-column:1/-1;">
+      <h2>Customer Engagement Over Time</h2>
+      {{ charts.spend_time|safe }}
+    </div>
+    {% endif %}
+
+    {% if charts.dept_spend %}
+    <div class="card">
+      <h2>Top Departments by Spend</h2>
+      {{ charts.dept_spend|safe }}
+    </div>
+    {% endif %}
+
+    {% if charts.loyalty %}
+    <div class="card">
+      <h2>Loyalty Program Impact</h2>
+      {{ charts.loyalty|safe }}
+    </div>
+    {% endif %}
+
+    {% if charts.brand %}
+    <div class="card">
+      <h2>Brand Preference: Private vs National</h2>
+      {{ charts.brand|safe }}
+    </div>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card">
+    <p style="color:var(--muted);">No data loaded yet. Please upload your CSV files first.</p>
+    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+  </div>
+{% endif %}
+{% endblock %}
