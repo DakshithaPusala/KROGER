@@ -26,29 +26,35 @@ def init_db():
     conn = get_db()
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS households (
-            hshd_num INTEGER, loyalty_flag TEXT, age_range TEXT,
-            marital_status TEXT, income_range TEXT, homeowner_desc TEXT,
-            hshd_composition TEXT, hshd_size TEXT, children TEXT
+            hshd_num INTEGER, l TEXT, age_range TEXT,
+            marital TEXT, income_range TEXT, homeowner TEXT,
+            hshd_composition TEXT, hh_size TEXT, children TEXT
         );
         CREATE TABLE IF NOT EXISTS transactions (
-            hshd_num INTEGER, basket_num TEXT, date TEXT,
+            basket_num TEXT, hshd_num INTEGER, purchase_ TEXT,
             product_num TEXT, spend REAL, units INTEGER,
-            store_region TEXT, week_num INTEGER, year INTEGER
+            store_r TEXT, week_num INTEGER, year INTEGER
         );
         CREATE TABLE IF NOT EXISTS products (
             product_num TEXT, department TEXT, commodity TEXT,
-            brand_type TEXT, natural_organic_flag TEXT
+            brand_ty TEXT, natural_organic_flag TEXT
         );
     """)
     conn.commit()
     conn.close()
 
 def load_csv_to_db(filepath, table):
-    df = pd.read_csv(filepath)
+    try:
+        df = pd.read_csv(filepath, encoding='utf-8')
+    except Exception:
+        df = pd.read_csv(filepath, encoding='latin-1')
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
     conn = get_db()
     df.to_sql(table, conn, if_exists="replace", index=False)
     conn.close()
+
+# Initialize DB on startup
+init_db()
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
@@ -68,17 +74,17 @@ def login():
 def hshd10():
     conn = get_db()
     rows = conn.execute("""
-        SELECT t.hshd_num, t.basket_num, t.date, t.product_num,
+        SELECT t.hshd_num, t.basket_num, t.purchase_, t.product_num,
                p.department, p.commodity, t.spend, t.units,
-               t.store_region, t.week_num, t.year,
-               h.loyalty_flag, h.age_range, h.marital_status,
-               h.income_range, h.homeowner_desc, h.hshd_composition,
-               h.hshd_size, h.children
+               t.store_r, t.week_num, t.year,
+               h.l, h.age_range, h.marital,
+               h.income_range, h.homeowner, h.hshd_composition,
+               h.hh_size, h.children
         FROM transactions t
-        LEFT JOIN households h ON t.hshd_num = h.hshd_num
-        LEFT JOIN products p ON t.product_num = p.product_num
-        WHERE t.hshd_num = 10
-        ORDER BY t.hshd_num, t.basket_num, t.date, t.product_num,
+        LEFT JOIN households h ON CAST(t.hshd_num AS TEXT) = CAST(h.hshd_num AS TEXT)
+        LEFT JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+        WHERE CAST(t.hshd_num AS TEXT) = '10'
+        ORDER BY t.hshd_num, t.basket_num, t.purchase_, t.product_num,
                  p.department, p.commodity
     """).fetchall()
     conn.close()
@@ -94,16 +100,16 @@ def search():
         if hshd_num:
             conn = get_db()
             rows = conn.execute("""
-                SELECT t.hshd_num, t.basket_num, t.date, t.product_num,
+                SELECT t.hshd_num, t.basket_num, t.purchase_, t.product_num,
                        p.department, p.commodity, t.spend, t.units,
-                       t.store_region, t.week_num, t.year,
-                       h.loyalty_flag, h.age_range, h.income_range,
-                       h.hshd_composition, h.hshd_size, h.children
+                       t.store_r, t.week_num, t.year,
+                       h.l, h.age_range, h.income_range,
+                       h.hshd_composition, h.hh_size, h.children
                 FROM transactions t
-                LEFT JOIN households h ON t.hshd_num = h.hshd_num
-                LEFT JOIN products p ON t.product_num = p.product_num
-                WHERE t.hshd_num = ?
-                ORDER BY t.hshd_num, t.basket_num, t.date, t.product_num,
+                LEFT JOIN households h ON CAST(t.hshd_num AS TEXT) = CAST(h.hshd_num AS TEXT)
+                LEFT JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+                WHERE CAST(t.hshd_num AS TEXT) = CAST(? AS TEXT)
+                ORDER BY t.hshd_num, t.basket_num, t.purchase_, t.product_num,
                          p.department, p.commodity
             """, (hshd_num,)).fetchall()
             conn.close()
@@ -129,148 +135,160 @@ def dashboard():
     conn = get_db()
     charts = {}
 
-    # Spend over time
-    df_time = pd.read_sql("""
-        SELECT year, week_num, SUM(spend) as total_spend
-        FROM transactions GROUP BY year, week_num ORDER BY year, week_num
-    """, conn)
-    if not df_time.empty:
-        fig = px.line(df_time, x="week_num", y="total_spend", color="year",
-                      title="Weekly Spend Over Time",
-                      labels={"week_num":"Week","total_spend":"Total Spend ($)"})
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                          font_color="#e0e0e0")
-        charts["spend_time"] = fig.to_html(full_html=False)
+    try:
+        # Spend over time
+        df_time = pd.read_sql("""
+            SELECT year, week_num, SUM(spend) as total_spend
+            FROM transactions GROUP BY year, week_num ORDER BY year, week_num
+        """, conn)
+        if not df_time.empty:
+            fig = px.line(df_time, x="week_num", y="total_spend", color="year",
+                          title="Weekly Spend Over Time",
+                          labels={"week_num":"Week","total_spend":"Total Spend ($)"})
+            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                              font_color="#e0e0e0")
+            charts["spend_time"] = fig.to_html(full_html=False)
+    except Exception:
+        pass
 
-    # Spend by department
-    df_dept = pd.read_sql("""
-        SELECT p.department, SUM(t.spend) as total_spend
-        FROM transactions t JOIN products p ON t.product_num = p.product_num
-        WHERE p.department IS NOT NULL
-        GROUP BY p.department ORDER BY total_spend DESC LIMIT 10
-    """, conn)
-    if not df_dept.empty:
-        fig2 = px.bar(df_dept, x="department", y="total_spend",
-                      title="Top 10 Departments by Spend",
-                      labels={"department":"Department","total_spend":"Total Spend ($)"})
-        fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                           font_color="#e0e0e0")
-        charts["dept_spend"] = fig2.to_html(full_html=False)
+    try:
+        # Spend by department
+        df_dept = pd.read_sql("""
+            SELECT p.department, SUM(t.spend) as total_spend
+            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+            WHERE p.department IS NOT NULL
+            GROUP BY p.department ORDER BY total_spend DESC LIMIT 10
+        """, conn)
+        if not df_dept.empty:
+            fig2 = px.bar(df_dept, x="department", y="total_spend",
+                          title="Top 10 Departments by Spend",
+                          labels={"department":"Department","total_spend":"Total Spend ($)"})
+            fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                               font_color="#e0e0e0")
+            charts["dept_spend"] = fig2.to_html(full_html=False)
+    except Exception:
+        pass
 
-    # Loyalty vs spend
-    df_loyal = pd.read_sql("""
-        SELECT h.loyalty_flag, SUM(t.spend) as total_spend, COUNT(*) as txn_count
-        FROM transactions t JOIN households h ON t.hshd_num = h.hshd_num
-        WHERE h.loyalty_flag IS NOT NULL
-        GROUP BY h.loyalty_flag
-    """, conn)
-    if not df_loyal.empty:
-        fig3 = px.bar(df_loyal, x="loyalty_flag", y="total_spend",
-                      title="Loyalty Members vs Non-Members: Total Spend",
-                      labels={"loyalty_flag":"Loyalty Flag","total_spend":"Total Spend ($)"})
-        fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                           font_color="#e0e0e0")
-        charts["loyalty"] = fig3.to_html(full_html=False)
+    try:
+        # Loyalty vs spend (column is 'l')
+        df_loyal = pd.read_sql("""
+            SELECT h.l as loyalty_flag, SUM(t.spend) as total_spend, COUNT(*) as txn_count
+            FROM transactions t JOIN households h ON CAST(t.hshd_num AS TEXT) = CAST(h.hshd_num AS TEXT)
+            WHERE h.l IS NOT NULL
+            GROUP BY h.l
+        """, conn)
+        if not df_loyal.empty:
+            fig3 = px.bar(df_loyal, x="loyalty_flag", y="total_spend",
+                          title="Loyalty Members vs Non-Members: Total Spend",
+                          labels={"loyalty_flag":"Loyalty Flag","total_spend":"Total Spend ($)"})
+            fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                               font_color="#e0e0e0")
+            charts["loyalty"] = fig3.to_html(full_html=False)
+    except Exception:
+        pass
 
-    # Brand preference
-    df_brand = pd.read_sql("""
-        SELECT p.brand_type, SUM(t.spend) as total_spend
-        FROM transactions t JOIN products p ON t.product_num = p.product_num
-        WHERE p.brand_type IS NOT NULL
-        GROUP BY p.brand_type
-    """, conn)
-    if not df_brand.empty:
-        fig4 = px.pie(df_brand, names="brand_type", values="total_spend",
-                      title="Private vs National Brand Spend")
-        fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0")
-        charts["brand"] = fig4.to_html(full_html=False)
+    try:
+        # Brand preference
+        df_brand = pd.read_sql("""
+            SELECT p.brand_ty, SUM(t.spend) as total_spend
+            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+            WHERE p.brand_ty IS NOT NULL
+            GROUP BY p.brand_ty
+        """, conn)
+        if not df_brand.empty:
+            fig4 = px.pie(df_brand, names="brand_ty", values="total_spend",
+                          title="Private vs National Brand Spend")
+            fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0")
+            charts["brand"] = fig4.to_html(full_html=False)
+    except Exception:
+        pass
 
     conn.close()
     return render_template("dashboard.html", charts=charts)
 
-# Req 7 — ML: Basket Analysis + Req 8 — Churn Prediction
+# Req 7 + 8 — ML Models
 @app.route("/ml")
 def ml():
     conn = get_db()
     results = {}
 
     # ── Req 7: Basket Analysis with Random Forest ──
-    df = pd.read_sql("""
-        SELECT t.hshd_num, t.basket_num, p.department, p.commodity,
-               p.brand_type, t.spend, t.units
-        FROM transactions t
-        JOIN products p ON t.product_num = p.product_num
-        WHERE p.department IS NOT NULL
-    """, conn)
+    try:
+        df = pd.read_sql("""
+            SELECT t.hshd_num, t.basket_num, p.department, p.commodity,
+                   p.brand_ty, t.spend, t.units
+            FROM transactions t
+            JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+            WHERE p.department IS NOT NULL
+        """, conn)
 
-    if not df.empty and len(df) > 100:
-        le = LabelEncoder()
-        df["dept_enc"] = le.fit_transform(df["department"].fillna("Unknown"))
-        df["brand_enc"] = le.fit_transform(df["brand_type"].fillna("Unknown"))
-        X = df[["dept_enc","brand_enc","spend","units"]].fillna(0)
-        y = df["dept_enc"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        rf = RandomForestRegressor(n_estimators=50, random_state=42)
-        rf.fit(X_train, y_train)
-        importances = dict(zip(["Department","Brand","Spend","Units"],
-                               [round(i*100,2) for i in rf.feature_importances_]))
-        results["basket_importances"] = importances
-        results["basket_score"] = round(rf.score(X_test, y_test)*100, 2)
+        if not df.empty and len(df) > 100:
+            le = LabelEncoder()
+            df["dept_enc"] = le.fit_transform(df["department"].fillna("Unknown"))
+            df["brand_enc"] = le.fit_transform(df["brand_ty"].fillna("Unknown"))
+            X = df[["dept_enc","brand_enc","spend","units"]].fillna(0)
+            y = df["dept_enc"]
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            rf = RandomForestRegressor(n_estimators=50, random_state=42)
+            rf.fit(X_train, y_train)
+            importances = dict(zip(["Department","Brand","Spend","Units"],
+                                   [round(i*100,2) for i in rf.feature_importances_]))
+            results["basket_importances"] = importances
+            results["basket_score"] = round(rf.score(X_test, y_test)*100, 2)
 
-        # Top co-purchased departments
-        basket_dept = df.groupby(["basket_num","department"]).size().reset_index(name="count")
-        top_combos = basket_dept.groupby("department")["count"].sum().sort_values(ascending=False).head(8)
-        fig_basket = px.bar(x=top_combos.index, y=top_combos.values,
-                            title="Most Frequently Purchased Departments",
-                            labels={"x":"Department","y":"Frequency"})
-        fig_basket.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                                 font_color="#e0e0e0")
-        results["basket_chart"] = fig_basket.to_html(full_html=False)
+            top_combos = df.groupby("department")["basket_num"].count().sort_values(ascending=False).head(8)
+            fig_basket = px.bar(x=top_combos.index, y=top_combos.values,
+                                title="Most Frequently Purchased Departments",
+                                labels={"x":"Department","y":"Frequency"})
+            fig_basket.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                                     font_color="#e0e0e0")
+            results["basket_chart"] = fig_basket.to_html(full_html=False)
+    except Exception as e:
+        results["basket_error"] = str(e)
 
     # ── Req 8: Churn Prediction with Gradient Boosting ──
-    df_txn = pd.read_sql("""
-        SELECT hshd_num, SUM(spend) as total_spend,
-               COUNT(*) as txn_count, MAX(year) as last_year,
-               MAX(week_num) as last_week, AVG(spend) as avg_spend
-        FROM transactions GROUP BY hshd_num
-    """, conn)
-    df_hh = pd.read_sql("SELECT hshd_num, loyalty_flag FROM households", conn)
+    try:
+        df_txn = pd.read_sql("""
+            SELECT hshd_num, SUM(spend) as total_spend,
+                   COUNT(*) as txn_count, MAX(year) as last_year,
+                   MAX(week_num) as last_week, AVG(spend) as avg_spend
+            FROM transactions GROUP BY hshd_num
+        """, conn)
+        df_hh = pd.read_sql("SELECT hshd_num, l FROM households", conn)
 
-    if not df_txn.empty and not df_hh.empty:
-        df_churn = df_txn.merge(df_hh, on="hshd_num", how="left")
-        max_week = df_churn["last_week"].max()
-        df_churn["churned"] = ((df_churn["last_week"] < max_week - 10) &
-                               (df_churn["last_year"] == df_churn["last_year"].min())).astype(int)
-        df_churn["loyalty_enc"] = (df_churn["loyalty_flag"] == "Y").astype(int)
-        features = ["total_spend","txn_count","avg_spend","loyalty_enc"]
-        X = df_churn[features].fillna(0)
-        y = df_churn["churned"]
+        if not df_txn.empty and not df_hh.empty:
+            df_churn = df_txn.merge(df_hh, on="hshd_num", how="left")
+            max_week = df_churn["last_week"].max()
+            df_churn["churned"] = ((df_churn["last_week"] < max_week - 10) &
+                                   (df_churn["last_year"] == df_churn["last_year"].min())).astype(int)
+            df_churn["loyalty_enc"] = (df_churn["l"] == "Y").astype(int)
+            features = ["total_spend","txn_count","avg_spend","loyalty_enc"]
+            X = df_churn[features].fillna(0)
+            y = df_churn["churned"]
 
-        if y.nunique() > 1:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            gb = GradientBoostingClassifier(n_estimators=50, random_state=42)
-            gb.fit(X_train, y_train)
-            y_pred = gb.predict(X_test)
-            results["churn_accuracy"] = round((y_pred == y_test).mean()*100, 2)
-            results["churn_count"] = int(df_churn["churned"].sum())
-            results["total_hh"] = int(len(df_churn))
-            results["churn_rate"] = round(df_churn["churned"].mean()*100, 2)
+            if y.nunique() > 1:
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                gb = GradientBoostingClassifier(n_estimators=50, random_state=42)
+                gb.fit(X_train, y_train)
+                y_pred = gb.predict(X_test)
+                results["churn_accuracy"] = round((y_pred == y_test).mean()*100, 2)
+                results["churn_count"] = int(df_churn["churned"].sum())
+                results["total_hh"] = int(len(df_churn))
+                results["churn_rate"] = round(df_churn["churned"].mean()*100, 2)
 
-            # Churn by loyalty
-            churn_loyal = df_churn.groupby("loyalty_flag")["churned"].mean().reset_index()
-            churn_loyal.columns = ["Loyalty","Churn Rate"]
-            churn_loyal["Churn Rate"] = (churn_loyal["Churn Rate"]*100).round(2)
-            fig_churn = px.bar(churn_loyal, x="Loyalty", y="Churn Rate",
-                               title="Churn Rate by Loyalty Status (%)",
-                               labels={"Loyalty":"Loyalty Flag","Churn Rate":"Churn Rate (%)"})
-            fig_churn.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                                    font_color="#e0e0e0")
-            results["churn_chart"] = fig_churn.to_html(full_html=False)
+                churn_loyal = df_churn.groupby("l")["churned"].mean().reset_index()
+                churn_loyal.columns = ["Loyalty","Churn Rate"]
+                churn_loyal["Churn Rate"] = (churn_loyal["Churn Rate"]*100).round(2)
+                fig_churn = px.bar(churn_loyal, x="Loyalty", y="Churn Rate",
+                                   title="Churn Rate by Loyalty Status (%)")
+                fig_churn.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                                        font_color="#e0e0e0")
+                results["churn_chart"] = fig_churn.to_html(full_html=False)
+    except Exception as e:
+        results["churn_error"] = str(e)
 
     conn.close()
     return render_template("ml.html", results=results)
-# Initialize DB on startup
-init_db()
 
 if __name__ == "__main__":
     app.run(debug=True)
