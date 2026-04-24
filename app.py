@@ -13,7 +13,8 @@ import numpy as np
 
 app = Flask(__name__)
 app.secret_key = "kroger-retail-secret"
-DB_PATH = "retail.db"
+import os
+DB_PATH = os.path.join(os.path.expanduser("~"), "retail.db")
 
 # ── DB helpers ──────────────────────────────────────────────────────────────
 
