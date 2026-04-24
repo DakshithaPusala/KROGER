@@ -269,7 +269,8 @@ def ml():
 
     conn.close()
     return render_template("ml.html", results=results)
+# Initialize DB on startup
+init_db()
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
