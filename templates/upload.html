@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Upload Data — Kroger Analytics{% endblock %}
+{% block content %}
+<h1>Upload Data</h1>
+<p class="subtitle">Load the latest Transactions, Households, and Products datasets</p>
+
+<div class="card" style="max-width:600px;">
+  <h2>Upload CSV Files</h2>
+  <form method="POST" action="/upload" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Households CSV (400_households.csv)</label>
+      <input type="file" name="households" accept=".csv">
+    </div>
+    <div class="form-group">
+      <label>Transactions CSV (400_transactions.csv)</label>
+      <input type="file" name="transactions" accept=".csv">
+    </div>
+    <div class="form-group">
+      <label>Products CSV (400_products.csv)</label>
+      <input type="file" name="products" accept=".csv">
+    </div>
+    <button type="submit" class="btn">Upload & Load →</button>
+  </form>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <h2>After Uploading</h2>
+  <p style="color:var(--muted);font-size:0.875rem;line-height:1.6;">
+    Once uploaded, all tables will be replaced with the new data.
+    Test the results using the Search page.
+  </p>
+  <a href="/search" class="btn btn-secondary" style="margin-top:1rem;display:inline-block;">Go to Search</a>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}HSHD #10 Data Pull{% endblock %}
+{% block content %}
+<h1>Sample Data Pull</h1>
+<p class="subtitle">Household #10 — Transactions linked with Households & Products tables</p>
+
+<div class="card">
+  <h2>HSHD #10 Transactions</h2>
+  {% if rows %}
+    <p style="color:var(--muted);font-size:0.8rem;margin-bottom:1rem;">{{ rows|length }} records found</p>
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>HSHD Num</th><th>Basket Num</th><th>Date</th><th>Product Num</th>
+          <th>Department</th><th>Commodity</th><th>Spend</th><th>Units</th>
+          <th>Region</th><th>Week</th><th>Year</th>
+          <th>Loyalty</th><th>Age</th><th>Income</th>
+          <th>Composition</th><th>Size</th><th>Children</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><span class="badge">{{ r.hshd_num }}</span></td>
+          <td>{{ r.basket_num }}</td>
+          <td>{{ r.date }}</td>
+          <td>{{ r.product_num }}</td>
+          <td>{{ r.department or '—' }}</td>
+          <td>{{ r.commodity or '—' }}</td>
+          <td>${{ "%.2f"|format(r.spend or 0) }}</td>
+          <td>{{ r.units }}</td>
+          <td>{{ r.store_region or '—' }}</td>
+          <td>{{ r.week_num }}</td>
+          <td>{{ r.year }}</td>
+          <td>{{ r.loyalty_flag or '—' }}</td>
+          <td>{{ r.age_range or '—' }}</td>
+          <td>{{ r.income_range or '—' }}</td>
+          <td>{{ r.hshd_composition or '—' }}</td>
+          <td>{{ r.hshd_size or '—' }}</td>
+          <td>{{ r.children or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% else %}
+    <p style="color:var(--muted);">No data found for HSHD #10. Please upload data first.</p>
+    <a href="/upload" class="btn" style="margin-top:1rem;">Upload Data</a>
+  {% endif %}
+</div>
+{% endblock %}
