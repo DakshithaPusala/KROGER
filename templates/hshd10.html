@@ -24,20 +24,20 @@
         <tr>
           <td><span class="badge">{{ r.hshd_num }}</span></td>
           <td>{{ r.basket_num }}</td>
-          <td>{{ r.date }}</td>
+          <td>{{ r.purchase_ or '—' }}</td>
           <td>{{ r.product_num }}</td>
           <td>{{ r.department or '—' }}</td>
           <td>{{ r.commodity or '—' }}</td>
           <td>${{ "%.2f"|format(r.spend or 0) }}</td>
           <td>{{ r.units }}</td>
-          <td>{{ r.store_region or '—' }}</td>
+          <td>{{ r.store_r or '—' }}</td>
           <td>{{ r.week_num }}</td>
           <td>{{ r.year }}</td>
-          <td>{{ r.loyalty_flag or '—' }}</td>
+          <td>{{ r.l or '—' }}</td>
           <td>{{ r.age_range or '—' }}</td>
           <td>{{ r.income_range or '—' }}</td>
           <td>{{ r.hshd_composition or '—' }}</td>
-          <td>{{ r.hshd_size or '—' }}</td>
+          <td>{{ r.hh_size or '—' }}</td>
           <td>{{ r.children or '—' }}</td>
         </tr>
         {% endfor %}
