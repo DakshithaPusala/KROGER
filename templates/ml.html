@@ -41,17 +41,15 @@
     Which product combinations are most commonly purchased? How can they drive cross-selling?
   </p>
   {% if results.basket %}
-  <h3 style="font-size:1rem;margin-bottom:0.75rem;">Top Departments by Basket Frequency</h3>
+  <h3 style="font-size:1rem;margin-bottom:0.75rem;">Top Departments by Product Count</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Department</th><th>Baskets</th><th>Total Spend ($)</th><th>Avg Spend ($)</th></tr></thead>
+    <thead><tr><th>Department</th><th>Product Count</th></tr></thead>
     <tbody>
       {% for r in results.basket %}
       <tr>
         <td>{{ r.department }}</td>
         <td>{{ r.baskets }}</td>
-        <td>${{ "{:,.2f}".format(r.total_spend) }}</td>
-        <td>${{ "{:,.2f}".format(r.avg_spend) }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -62,13 +60,12 @@
   <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">Top Commodities (Cross-Sell Opportunities)</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Commodity</th><th>Frequency</th><th>Total Spend ($)</th></tr></thead>
+    <thead><tr><th>Commodity</th><th>Frequency</th></tr></thead>
     <tbody>
       {% for r in results.commodities %}
       <tr>
         <td>{{ r.commodity }}</td>
         <td>{{ r.freq }}</td>
-        <td>${{ "{:,.2f}".format(r.total) }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -86,6 +83,7 @@
   </div>
   {% else %}
   <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
+  <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
   {% endif %}
 </div>
 
@@ -137,7 +135,15 @@
   <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">At-Risk Households (Sample)</h3>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>HSHD Num</th><th>Last Year</th><th>Last Week</th><th>Transactions</th><th>Total Spend ($)</th><th>Loyalty</th></tr></thead>
+    <thead>
+      <tr>
+        <th>HSHD Num</th>
+        <th>Last Year</th>
+        <th>Last Week</th>
+        <th>Transactions</th>
+        <th>Total Spend ($)</th>
+      </tr>
+    </thead>
     <tbody>
       {% for r in results.at_risk %}
       <tr>
@@ -145,8 +151,7 @@
         <td>{{ r.last_year }}</td>
         <td>{{ r.last_week }}</td>
         <td>{{ r.txn_count }}</td>
-        <td>${{ "{:,.2f}".format(r.total_spend) }}</td>
-        <td>{{ r.loyalty or '—' }}</td>
+        <td>${{ r.total_spend or 0 }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -165,6 +170,7 @@
   </div>
   {% else %}
   <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
+  <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
   {% endif %}
 </div>
 {% endblock %}
