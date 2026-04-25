@@ -7,8 +7,6 @@ app = Flask(__name__)
 app.secret_key = "kroger-retail-secret"
 DB_PATH = os.path.join(os.path.expanduser("~"), "retail.db")
 
-# ── DB helpers ──────────────────────────────────────────────────────────────
-
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -45,23 +43,18 @@ def load_csv_to_db(filepath, table):
     df.to_sql(table, conn, if_exists="replace", index=False)
     conn.close()
 
-# Initialize DB on startup
 init_db()
-
-# ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     return redirect(url_for("login"))
 
-# Req 2 — Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         return redirect(url_for("search"))
     return render_template("login.html")
 
-# Req 3 — Sample data pull for HSHD #10
 @app.route("/hshd10")
 def hshd10():
     conn = get_db()
@@ -82,7 +75,6 @@ def hshd10():
     conn.close()
     return render_template("hshd10.html", rows=rows)
 
-# Req 4 — Interactive search by hshd_num
 @app.route("/search", methods=["GET", "POST"])
 def search():
     rows = []
@@ -107,7 +99,6 @@ def search():
             conn.close()
     return render_template("search.html", rows=rows, hshd_num=hshd_num)
 
-# Req 5 — Upload new data
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
@@ -121,14 +112,13 @@ def upload():
         return redirect(url_for("search"))
     return render_template("upload.html")
 
-# Req 6 — Dashboard (pure SQLite, no pandas joins)
 @app.route("/dashboard")
 def dashboard():
     conn = get_db()
     data = {}
 
     try:
-        cur = conn.execute("SELECT year, ROUND(SUM(spend),2) as total FROM transactions GROUP BY year ORDER BY year")
+        cur = conn.execute("SELECT year, ROUND(SUM(spend),2) as total FROM transactions WHERE year IS NOT NULL GROUP BY year ORDER BY year")
         data["spend_by_year"] = [dict(r) for r in cur.fetchall()]
     except: data["spend_by_year"] = []
 
@@ -143,7 +133,7 @@ def dashboard():
     except: data["loyalty"] = []
 
     try:
-        cur = conn.execute("SELECT department, ROUND(SUM(spend),2) as total FROM products GROUP BY department ORDER BY total DESC LIMIT 10")
+        cur = conn.execute("SELECT department, COUNT(*) as count FROM products WHERE department IS NOT NULL GROUP BY department ORDER BY count DESC LIMIT 10")
         data["top_depts"] = [dict(r) for r in cur.fetchall()]
     except: data["top_depts"] = []
 
@@ -160,22 +150,23 @@ def dashboard():
     conn.close()
     return render_template("dashboard.html", data=data)
 
-# Req 7 + 8 — ML (pure SQLite, no pandas, no joins)
 @app.route("/ml")
 def ml():
     conn = get_db()
     results = {}
 
+    # Req 7: Basket Analysis
     try:
-        cur = conn.execute("SELECT department, COUNT(*) as baskets, ROUND(SUM(spend),2) as total_spend, ROUND(AVG(spend),2) as avg_spend FROM products GROUP BY department ORDER BY baskets DESC LIMIT 10")
+        cur = conn.execute("SELECT department, COUNT(*) as baskets FROM products WHERE department IS NOT NULL GROUP BY department ORDER BY baskets DESC LIMIT 10")
         results["basket"] = [dict(r) for r in cur.fetchall()]
     except: results["basket"] = []
 
     try:
-        cur = conn.execute("SELECT commodity, COUNT(*) as freq, ROUND(SUM(spend),2) as total FROM products WHERE commodity IS NOT NULL GROUP BY commodity ORDER BY freq DESC LIMIT 10")
+        cur = conn.execute("SELECT commodity, COUNT(*) as freq FROM products WHERE commodity IS NOT NULL GROUP BY commodity ORDER BY freq DESC LIMIT 10")
         results["commodities"] = [dict(r) for r in cur.fetchall()]
     except: results["commodities"] = []
 
+    # Req 8: Churn Prediction
     try:
         cur = conn.execute("""
             SELECT hshd_num, MAX(year) as last_year, MAX(week_num) as last_week,
@@ -184,11 +175,8 @@ def ml():
         """)
         rows = cur.fetchall()
         if rows:
-            import statistics
-            weeks = [r["last_week"] for r in rows]
-            years = [r["last_year"] for r in rows]
-            max_week = max(weeks)
-            max_year = max(years)
+            max_week = max(r["last_week"] for r in rows)
+            max_year = max(r["last_year"] for r in rows)
             churned = [r for r in rows if r["last_week"] < max_week - 10 and r["last_year"] < max_year]
             active = [r for r in rows if not (r["last_week"] < max_week - 10 and r["last_year"] < max_year)]
             results["total_hh"] = len(rows)
