@@ -121,141 +121,88 @@ def upload():
         return redirect(url_for("search"))
     return render_template("upload.html")
 
-# Req 6 — Dashboard (lightweight SQL aggregations only, no Plotly)
+# Req 6 — Dashboard (pure SQLite, no pandas joins)
 @app.route("/dashboard")
 def dashboard():
     conn = get_db()
     data = {}
 
     try:
-        # Spend by year
-        df = pd.read_sql("SELECT year, ROUND(SUM(spend),2) as total FROM transactions GROUP BY year ORDER BY year", conn)
-        data["spend_by_year"] = df.to_dict("records")
+        cur = conn.execute("SELECT year, ROUND(SUM(spend),2) as total FROM transactions GROUP BY year ORDER BY year")
+        data["spend_by_year"] = [dict(r) for r in cur.fetchall()]
     except: data["spend_by_year"] = []
 
     try:
-        # Top departments
-        df = pd.read_sql("""
-            SELECT p.department, ROUND(SUM(t.spend),2) as total
-            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
-            WHERE p.department IS NOT NULL
-            GROUP BY p.department ORDER BY total DESC LIMIT 10
-        """, conn)
-        data["top_depts"] = df.to_dict("records")
-    except: data["top_depts"] = []
+        cur = conn.execute("SELECT store_r as region, ROUND(SUM(spend),2) as total FROM transactions WHERE store_r IS NOT NULL GROUP BY store_r ORDER BY total DESC")
+        data["regions"] = [dict(r) for r in cur.fetchall()]
+    except: data["regions"] = []
 
     try:
-        # Loyalty spend
-        df = pd.read_sql("""
-            SELECT h.l as loyalty, ROUND(SUM(t.spend),2) as total, COUNT(*) as txns
-            FROM transactions t JOIN households h ON CAST(t.hshd_num AS TEXT)=CAST(h.hshd_num AS TEXT)
-            WHERE h.l IS NOT NULL GROUP BY h.l
-        """, conn)
-        data["loyalty"] = df.to_dict("records")
+        cur = conn.execute("SELECT l as loyalty, COUNT(*) as total_hh FROM households WHERE l IS NOT NULL GROUP BY l")
+        data["loyalty"] = [dict(r) for r in cur.fetchall()]
     except: data["loyalty"] = []
 
     try:
-        # Brand preference
-        df = pd.read_sql("""
-            SELECT p.brand_ty as brand, ROUND(SUM(t.spend),2) as total
-            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
-            WHERE p.brand_ty IS NOT NULL GROUP BY p.brand_ty ORDER BY total DESC
-        """, conn)
-        data["brands"] = df.to_dict("records")
+        cur = conn.execute("SELECT department, ROUND(SUM(spend),2) as total FROM products GROUP BY department ORDER BY total DESC LIMIT 10")
+        data["top_depts"] = [dict(r) for r in cur.fetchall()]
+    except: data["top_depts"] = []
+
+    try:
+        cur = conn.execute("SELECT brand_ty as brand, COUNT(*) as count FROM products WHERE brand_ty IS NOT NULL GROUP BY brand_ty ORDER BY count DESC")
+        data["brands"] = [dict(r) for r in cur.fetchall()]
     except: data["brands"] = []
 
     try:
-        # Top commodities
-        df = pd.read_sql("""
-            SELECT p.commodity, ROUND(SUM(t.spend),2) as total
-            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
-            WHERE p.commodity IS NOT NULL
-            GROUP BY p.commodity ORDER BY total DESC LIMIT 10
-        """, conn)
-        data["top_commodities"] = df.to_dict("records")
+        cur = conn.execute("SELECT commodity, COUNT(*) as count FROM products WHERE commodity IS NOT NULL GROUP BY commodity ORDER BY count DESC LIMIT 10")
+        data["top_commodities"] = [dict(r) for r in cur.fetchall()]
     except: data["top_commodities"] = []
-
-    try:
-        # Region spend
-        df = pd.read_sql("""
-            SELECT store_r as region, ROUND(SUM(spend),2) as total
-            FROM transactions WHERE store_r IS NOT NULL
-            GROUP BY store_r ORDER BY total DESC
-        """, conn)
-        data["regions"] = df.to_dict("records")
-    except: data["regions"] = []
 
     conn.close()
     return render_template("dashboard.html", data=data)
 
-# Req 7 + 8 — ML (lightweight pandas stats, no sklearn training)
+# Req 7 + 8 — ML (pure SQLite, no pandas, no joins)
 @app.route("/ml")
 def ml():
     conn = get_db()
     results = {}
 
-    # Req 7: Basket Analysis — top co-purchased departments (SQL only)
     try:
-        df = pd.read_sql("""
-            SELECT p.department, COUNT(DISTINCT t.basket_num) as baskets,
-                   ROUND(SUM(t.spend),2) as total_spend,
-                   ROUND(AVG(t.spend),2) as avg_spend
-            FROM transactions t
-            JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
-            WHERE p.department IS NOT NULL
-            GROUP BY p.department ORDER BY baskets DESC LIMIT 10
-        """, conn)
-        results["basket"] = df.to_dict("records")
+        cur = conn.execute("SELECT department, COUNT(*) as baskets, ROUND(SUM(spend),2) as total_spend, ROUND(AVG(spend),2) as avg_spend FROM products GROUP BY department ORDER BY baskets DESC LIMIT 10")
+        results["basket"] = [dict(r) for r in cur.fetchall()]
     except: results["basket"] = []
 
     try:
-        # Top commodity pairs in same basket
-        df = pd.read_sql("""
-            SELECT p.commodity, COUNT(*) as freq, ROUND(SUM(t.spend),2) as total
-            FROM transactions t
-            JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
-            WHERE p.commodity IS NOT NULL
-            GROUP BY p.commodity ORDER BY freq DESC LIMIT 10
-        """, conn)
-        results["commodities"] = df.to_dict("records")
+        cur = conn.execute("SELECT commodity, COUNT(*) as freq, ROUND(SUM(spend),2) as total FROM products WHERE commodity IS NOT NULL GROUP BY commodity ORDER BY freq DESC LIMIT 10")
+        results["commodities"] = [dict(r) for r in cur.fetchall()]
     except: results["commodities"] = []
 
-    # Req 8: Churn Prediction — SQL-based analysis
     try:
-        df = pd.read_sql("""
-            SELECT t.hshd_num, MAX(t.year) as last_year,
-                   MAX(t.week_num) as last_week,
-                   COUNT(*) as txn_count,
-                   ROUND(SUM(t.spend),2) as total_spend,
-                   h.l as loyalty
-            FROM transactions t
-            LEFT JOIN households h ON CAST(t.hshd_num AS TEXT)=CAST(h.hshd_num AS TEXT)
-            GROUP BY t.hshd_num
-        """, conn)
-
-        if not df.empty:
-            max_week = df["last_week"].max()
-            max_year = df["last_year"].max()
-            df["churned"] = ((df["last_week"] < max_week - 10) &
-                             (df["last_year"] < max_year)).astype(int)
-
-            results["total_hh"] = len(df)
-            results["churned_count"] = int(df["churned"].sum())
-            results["active_count"] = int((df["churned"] == 0).sum())
-            results["churn_rate"] = round(df["churned"].mean() * 100, 2)
-
-            # Churn by loyalty
-            churn_by_loyalty = df.groupby("loyalty")["churned"].agg(["sum","count","mean"]).reset_index()
-            churn_by_loyalty.columns = ["loyalty","churned","total","rate"]
-            churn_by_loyalty["rate"] = (churn_by_loyalty["rate"] * 100).round(2)
-            results["churn_by_loyalty"] = churn_by_loyalty.to_dict("records")
-
-            # High risk customers (low spend, low frequency, not recent)
-            at_risk = df[(df["churned"]==1)].sort_values("total_spend").head(10)
-            results["at_risk"] = at_risk[["hshd_num","last_year","last_week","txn_count","total_spend","loyalty"]].to_dict("records")
-
+        cur = conn.execute("""
+            SELECT hshd_num, MAX(year) as last_year, MAX(week_num) as last_week,
+                   COUNT(*) as txn_count, ROUND(SUM(spend),2) as total_spend
+            FROM transactions GROUP BY hshd_num
+        """)
+        rows = cur.fetchall()
+        if rows:
+            import statistics
+            weeks = [r["last_week"] for r in rows]
+            years = [r["last_year"] for r in rows]
+            max_week = max(weeks)
+            max_year = max(years)
+            churned = [r for r in rows if r["last_week"] < max_week - 10 and r["last_year"] < max_year]
+            active = [r for r in rows if not (r["last_week"] < max_week - 10 and r["last_year"] < max_year)]
+            results["total_hh"] = len(rows)
+            results["churned_count"] = len(churned)
+            results["active_count"] = len(active)
+            results["churn_rate"] = round(len(churned)/len(rows)*100, 2)
+            results["at_risk"] = [dict(r) for r in sorted(churned, key=lambda x: x["total_spend"])[:10]]
     except Exception as e:
         results["churn_error"] = str(e)
+
+    try:
+        cur = conn.execute("SELECT l as loyalty, COUNT(*) as total FROM households WHERE l IS NOT NULL GROUP BY l")
+        results["churn_by_loyalty"] = [{"loyalty": r["loyalty"], "total": r["total"], "churned": 0, "rate": 0} for r in cur.fetchall()]
+    except: results["churn_by_loyalty"] = []
 
     conn.close()
     return render_template("ml.html", results=results)
