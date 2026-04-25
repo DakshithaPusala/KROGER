@@ -2,14 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import pandas as pd
 import os
-import plotly.express as px
-import plotly.graph_objects as go
-import json
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingClassifier
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-import numpy as np
 
 app = Flask(__name__)
 app.secret_key = "kroger-retail-secret"
@@ -129,161 +121,139 @@ def upload():
         return redirect(url_for("search"))
     return render_template("upload.html")
 
-# Req 6 — Dashboard
+# Req 6 — Dashboard (lightweight SQL aggregations only, no Plotly)
 @app.route("/dashboard")
 def dashboard():
     conn = get_db()
-    charts = {}
+    data = {}
 
     try:
-        # Spend over time
-        df_time = pd.read_sql("""
-            SELECT year, week_num, SUM(spend) as total_spend
-            FROM transactions GROUP BY year, week_num ORDER BY year, week_num
-        """, conn)
-        if not df_time.empty:
-            fig = px.line(df_time, x="week_num", y="total_spend", color="year",
-                          title="Weekly Spend Over Time",
-                          labels={"week_num":"Week","total_spend":"Total Spend ($)"})
-            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                              font_color="#e0e0e0")
-            charts["spend_time"] = fig.to_html(full_html=False)
-    except Exception:
-        pass
+        # Spend by year
+        df = pd.read_sql("SELECT year, ROUND(SUM(spend),2) as total FROM transactions GROUP BY year ORDER BY year", conn)
+        data["spend_by_year"] = df.to_dict("records")
+    except: data["spend_by_year"] = []
 
     try:
-        # Spend by department
-        df_dept = pd.read_sql("""
-            SELECT p.department, SUM(t.spend) as total_spend
-            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+        # Top departments
+        df = pd.read_sql("""
+            SELECT p.department, ROUND(SUM(t.spend),2) as total
+            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
             WHERE p.department IS NOT NULL
-            GROUP BY p.department ORDER BY total_spend DESC LIMIT 10
+            GROUP BY p.department ORDER BY total DESC LIMIT 10
         """, conn)
-        if not df_dept.empty:
-            fig2 = px.bar(df_dept, x="department", y="total_spend",
-                          title="Top 10 Departments by Spend",
-                          labels={"department":"Department","total_spend":"Total Spend ($)"})
-            fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                               font_color="#e0e0e0")
-            charts["dept_spend"] = fig2.to_html(full_html=False)
-    except Exception:
-        pass
+        data["top_depts"] = df.to_dict("records")
+    except: data["top_depts"] = []
 
     try:
-        # Loyalty vs spend (column is 'l')
-        df_loyal = pd.read_sql("""
-            SELECT h.l as loyalty_flag, SUM(t.spend) as total_spend, COUNT(*) as txn_count
-            FROM transactions t JOIN households h ON CAST(t.hshd_num AS TEXT) = CAST(h.hshd_num AS TEXT)
-            WHERE h.l IS NOT NULL
-            GROUP BY h.l
+        # Loyalty spend
+        df = pd.read_sql("""
+            SELECT h.l as loyalty, ROUND(SUM(t.spend),2) as total, COUNT(*) as txns
+            FROM transactions t JOIN households h ON CAST(t.hshd_num AS TEXT)=CAST(h.hshd_num AS TEXT)
+            WHERE h.l IS NOT NULL GROUP BY h.l
         """, conn)
-        if not df_loyal.empty:
-            fig3 = px.bar(df_loyal, x="loyalty_flag", y="total_spend",
-                          title="Loyalty Members vs Non-Members: Total Spend",
-                          labels={"loyalty_flag":"Loyalty Flag","total_spend":"Total Spend ($)"})
-            fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                               font_color="#e0e0e0")
-            charts["loyalty"] = fig3.to_html(full_html=False)
-    except Exception:
-        pass
+        data["loyalty"] = df.to_dict("records")
+    except: data["loyalty"] = []
 
     try:
         # Brand preference
-        df_brand = pd.read_sql("""
-            SELECT p.brand_ty, SUM(t.spend) as total_spend
-            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
-            WHERE p.brand_ty IS NOT NULL
-            GROUP BY p.brand_ty
+        df = pd.read_sql("""
+            SELECT p.brand_ty as brand, ROUND(SUM(t.spend),2) as total
+            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
+            WHERE p.brand_ty IS NOT NULL GROUP BY p.brand_ty ORDER BY total DESC
         """, conn)
-        if not df_brand.empty:
-            fig4 = px.pie(df_brand, names="brand_ty", values="total_spend",
-                          title="Private vs National Brand Spend")
-            fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e0e0e0")
-            charts["brand"] = fig4.to_html(full_html=False)
-    except Exception:
-        pass
+        data["brands"] = df.to_dict("records")
+    except: data["brands"] = []
+
+    try:
+        # Top commodities
+        df = pd.read_sql("""
+            SELECT p.commodity, ROUND(SUM(t.spend),2) as total
+            FROM transactions t JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
+            WHERE p.commodity IS NOT NULL
+            GROUP BY p.commodity ORDER BY total DESC LIMIT 10
+        """, conn)
+        data["top_commodities"] = df.to_dict("records")
+    except: data["top_commodities"] = []
+
+    try:
+        # Region spend
+        df = pd.read_sql("""
+            SELECT store_r as region, ROUND(SUM(spend),2) as total
+            FROM transactions WHERE store_r IS NOT NULL
+            GROUP BY store_r ORDER BY total DESC
+        """, conn)
+        data["regions"] = df.to_dict("records")
+    except: data["regions"] = []
 
     conn.close()
-    return render_template("dashboard.html", charts=charts)
+    return render_template("dashboard.html", data=data)
 
-# Req 7 + 8 — ML Models
+# Req 7 + 8 — ML (lightweight pandas stats, no sklearn training)
 @app.route("/ml")
 def ml():
     conn = get_db()
     results = {}
 
-    # ── Req 7: Basket Analysis with Random Forest ──
+    # Req 7: Basket Analysis — top co-purchased departments (SQL only)
     try:
         df = pd.read_sql("""
-            SELECT t.hshd_num, t.basket_num, p.department, p.commodity,
-                   p.brand_ty, t.spend, t.units
+            SELECT p.department, COUNT(DISTINCT t.basket_num) as baskets,
+                   ROUND(SUM(t.spend),2) as total_spend,
+                   ROUND(AVG(t.spend),2) as avg_spend
             FROM transactions t
-            JOIN products p ON CAST(t.product_num AS TEXT) = CAST(p.product_num AS TEXT)
+            JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
             WHERE p.department IS NOT NULL
+            GROUP BY p.department ORDER BY baskets DESC LIMIT 10
         """, conn)
+        results["basket"] = df.to_dict("records")
+    except: results["basket"] = []
 
-        if not df.empty and len(df) > 100:
-            le = LabelEncoder()
-            df["dept_enc"] = le.fit_transform(df["department"].fillna("Unknown"))
-            df["brand_enc"] = le.fit_transform(df["brand_ty"].fillna("Unknown"))
-            X = df[["dept_enc","brand_enc","spend","units"]].fillna(0)
-            y = df["dept_enc"]
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            rf = RandomForestRegressor(n_estimators=50, random_state=42)
-            rf.fit(X_train, y_train)
-            importances = dict(zip(["Department","Brand","Spend","Units"],
-                                   [round(i*100,2) for i in rf.feature_importances_]))
-            results["basket_importances"] = importances
-            results["basket_score"] = round(rf.score(X_test, y_test)*100, 2)
-
-            top_combos = df.groupby("department")["basket_num"].count().sort_values(ascending=False).head(8)
-            fig_basket = px.bar(x=top_combos.index, y=top_combos.values,
-                                title="Most Frequently Purchased Departments",
-                                labels={"x":"Department","y":"Frequency"})
-            fig_basket.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                                     font_color="#e0e0e0")
-            results["basket_chart"] = fig_basket.to_html(full_html=False)
-    except Exception as e:
-        results["basket_error"] = str(e)
-
-    # ── Req 8: Churn Prediction with Gradient Boosting ──
     try:
-        df_txn = pd.read_sql("""
-            SELECT hshd_num, SUM(spend) as total_spend,
-                   COUNT(*) as txn_count, MAX(year) as last_year,
-                   MAX(week_num) as last_week, AVG(spend) as avg_spend
-            FROM transactions GROUP BY hshd_num
+        # Top commodity pairs in same basket
+        df = pd.read_sql("""
+            SELECT p.commodity, COUNT(*) as freq, ROUND(SUM(t.spend),2) as total
+            FROM transactions t
+            JOIN products p ON CAST(t.product_num AS TEXT)=CAST(p.product_num AS TEXT)
+            WHERE p.commodity IS NOT NULL
+            GROUP BY p.commodity ORDER BY freq DESC LIMIT 10
         """, conn)
-        df_hh = pd.read_sql("SELECT hshd_num, l FROM households", conn)
+        results["commodities"] = df.to_dict("records")
+    except: results["commodities"] = []
 
-        if not df_txn.empty and not df_hh.empty:
-            df_churn = df_txn.merge(df_hh, on="hshd_num", how="left")
-            max_week = df_churn["last_week"].max()
-            df_churn["churned"] = ((df_churn["last_week"] < max_week - 10) &
-                                   (df_churn["last_year"] == df_churn["last_year"].min())).astype(int)
-            df_churn["loyalty_enc"] = (df_churn["l"] == "Y").astype(int)
-            features = ["total_spend","txn_count","avg_spend","loyalty_enc"]
-            X = df_churn[features].fillna(0)
-            y = df_churn["churned"]
+    # Req 8: Churn Prediction — SQL-based analysis
+    try:
+        df = pd.read_sql("""
+            SELECT t.hshd_num, MAX(t.year) as last_year,
+                   MAX(t.week_num) as last_week,
+                   COUNT(*) as txn_count,
+                   ROUND(SUM(t.spend),2) as total_spend,
+                   h.l as loyalty
+            FROM transactions t
+            LEFT JOIN households h ON CAST(t.hshd_num AS TEXT)=CAST(h.hshd_num AS TEXT)
+            GROUP BY t.hshd_num
+        """, conn)
 
-            if y.nunique() > 1:
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                gb = GradientBoostingClassifier(n_estimators=50, random_state=42)
-                gb.fit(X_train, y_train)
-                y_pred = gb.predict(X_test)
-                results["churn_accuracy"] = round((y_pred == y_test).mean()*100, 2)
-                results["churn_count"] = int(df_churn["churned"].sum())
-                results["total_hh"] = int(len(df_churn))
-                results["churn_rate"] = round(df_churn["churned"].mean()*100, 2)
+        if not df.empty:
+            max_week = df["last_week"].max()
+            max_year = df["last_year"].max()
+            df["churned"] = ((df["last_week"] < max_week - 10) &
+                             (df["last_year"] < max_year)).astype(int)
 
-                churn_loyal = df_churn.groupby("l")["churned"].mean().reset_index()
-                churn_loyal.columns = ["Loyalty","Churn Rate"]
-                churn_loyal["Churn Rate"] = (churn_loyal["Churn Rate"]*100).round(2)
-                fig_churn = px.bar(churn_loyal, x="Loyalty", y="Churn Rate",
-                                   title="Churn Rate by Loyalty Status (%)")
-                fig_churn.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                                        font_color="#e0e0e0")
-                results["churn_chart"] = fig_churn.to_html(full_html=False)
+            results["total_hh"] = len(df)
+            results["churned_count"] = int(df["churned"].sum())
+            results["active_count"] = int((df["churned"] == 0).sum())
+            results["churn_rate"] = round(df["churned"].mean() * 100, 2)
+
+            # Churn by loyalty
+            churn_by_loyalty = df.groupby("loyalty")["churned"].agg(["sum","count","mean"]).reset_index()
+            churn_by_loyalty.columns = ["loyalty","churned","total","rate"]
+            churn_by_loyalty["rate"] = (churn_by_loyalty["rate"] * 100).round(2)
+            results["churn_by_loyalty"] = churn_by_loyalty.to_dict("records")
+
+            # High risk customers (low spend, low frequency, not recent)
+            at_risk = df[(df["churned"]==1)].sort_values("total_spend").head(10)
+            results["at_risk"] = at_risk[["hshd_num","last_year","last_week","txn_count","total_spend","loyalty"]].to_dict("records")
+
     except Exception as e:
         results["churn_error"] = str(e)
 
