@@ -6,7 +6,6 @@
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
 
-  <!-- Spend by Year -->
   <div class="card">
     <h2>Spend by Year</h2>
     {% if data.spend_by_year %}
@@ -14,74 +13,69 @@
       <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
       <tbody>
         {% for r in data.spend_by_year %}
-        <tr><td>{{ r.year }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
-    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+    {% else %}<p style="color:var(--muted)">No data yet. Upload CSV files first.</p>{% endif %}
   </div>
 
-  <!-- Loyalty Spend -->
   <div class="card">
-    <h2>Loyalty Program Impact</h2>
+    <h2>Loyalty Program</h2>
     {% if data.loyalty %}
     <table>
-      <thead><tr><th>Loyalty</th><th>Total Spend ($)</th><th>Transactions</th></tr></thead>
+      <thead><tr><th>Loyalty Flag</th><th>Households</th></tr></thead>
       <tbody>
         {% for r in data.loyalty %}
-        <tr><td>{{ r.loyalty }}</td><td>${{ "{:,.2f}".format(r.total) }}</td><td>{{ r.txns }}</td></tr>
+        <tr><td>{{ r.loyalty }}</td><td>{{ r.total_hh }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
     {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
   </div>
 
-  <!-- Top Departments -->
   <div class="card">
-    <h2>Top 10 Departments by Spend</h2>
+    <h2>Top 10 Departments</h2>
     {% if data.top_depts %}
     <table>
-      <thead><tr><th>Department</th><th>Total Spend ($)</th></tr></thead>
+      <thead><tr><th>Department</th><th>Products</th></tr></thead>
       <tbody>
         {% for r in data.top_depts %}
-        <tr><td>{{ r.department }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        <tr><td>{{ r.department }}</td><td>{{ r.count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
     {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
   </div>
 
-  <!-- Brand Preference -->
   <div class="card">
-    <h2>Private vs National Brand</h2>
+    <h2>Brand Preference</h2>
     {% if data.brands %}
     <table>
-      <thead><tr><th>Brand Type</th><th>Total Spend ($)</th></tr></thead>
+      <thead><tr><th>Brand Type</th><th>Products</th></tr></thead>
       <tbody>
         {% for r in data.brands %}
-        <tr><td>{{ r.brand }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        <tr><td>{{ r.brand }}</td><td>{{ r.count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
     {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
   </div>
 
-  <!-- Top Commodities -->
   <div class="card">
-    <h2>Top 10 Commodities</h2>
-    {% if data.top_commodities %}
+    <h2>Spend by Year</h2>
+    {% if data.spend_by_year %}
     <table>
-      <thead><tr><th>Commodity</th><th>Total Spend ($)</th></tr></thead>
+      <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
       <tbody>
-        {% for r in data.top_commodities %}
-        <tr><td>{{ r.commodity }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% for r in data.spend_by_year %}
+        <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
     {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
   </div>
 
-  <!-- Region Spend -->
   <div class="card">
     <h2>Spend by Region</h2>
     {% if data.regions %}
@@ -89,7 +83,21 @@
       <thead><tr><th>Region</th><th>Total Spend ($)</th></tr></thead>
       <tbody>
         {% for r in data.regions %}
-        <tr><td>{{ r.region }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        <tr><td>{{ r.region }}</td><td>${{ r.total }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+  <div class="card" style="grid-column:1/-1;">
+    <h2>Top 10 Commodities</h2>
+    {% if data.top_commodities %}
+    <table>
+      <thead><tr><th>Commodity</th><th>Products</th></tr></thead>
+      <tbody>
+        {% for r in data.top_commodities %}
+        <tr><td>{{ r.commodity }}</td><td>{{ r.count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
