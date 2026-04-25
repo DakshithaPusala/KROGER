@@ -2,7 +2,7 @@
 {% block title %}ML Models — Kroger Analytics{% endblock %}
 {% block content %}
 <h1>Machine Learning Models</h1>
-<p class="subtitle">Basket Analysis (Random Forest) & Churn Prediction (Gradient Boosting)</p>
+<p class="subtitle">Basket Analysis & Churn Prediction using retail transaction data</p>
 
 <!-- ML Write-Up — Req 1 -->
 <div class="card">
@@ -12,59 +12,80 @@
       <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Linear Regression</div>
       <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
         Predicts a continuous outcome (e.g., total spend) as a weighted sum of input features.
-        Simple, interpretable, and fast — but assumes a linear relationship between inputs and output.
-        Best used for CLV estimation when relationships are straightforward.
+        Simple, interpretable, and fast — best used for CLV estimation when relationships are straightforward.
       </p>
     </div>
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
       <div style="font-family:'Syne',sans-serif;font-weight:700;color:#3b82f6;margin-bottom:0.5rem;">Random Forest</div>
       <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
         An ensemble of decision trees that vote on the final prediction. Handles non-linear
-        patterns, mixed data types, and is robust to overfitting. Used here for basket analysis
-        to identify which product features drive purchasing combinations.
+        patterns and mixed data types. Selected for CLV — handles demographic + transaction
+        features without requiring feature scaling.
       </p>
     </div>
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
       <div style="font-family:'Syne',sans-serif;font-weight:700;color:#f59e0b;margin-bottom:0.5rem;">Gradient Boosting</div>
       <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
-        Builds trees sequentially, each correcting errors from the previous. Typically achieves
-        the highest accuracy among the three. Used here for churn prediction to identify
-        at-risk customers based on transaction history and loyalty behavior.
+        Builds trees sequentially, each correcting errors from the previous. Highest accuracy
+        among the three. Used for churn prediction to identify at-risk customers based on
+        transaction history and loyalty behavior.
       </p>
     </div>
   </div>
-  <p style="font-size:0.8rem;color:var(--muted);margin-top:1rem;">
-    <strong style="color:var(--text);">Selected for CLV:</strong> Random Forest — handles the mixed demographic and 
-    transaction features in this dataset without requiring feature scaling, and provides 
-    feature importance scores to explain which variables drive customer lifetime value.
-  </p>
 </div>
 
 <!-- Req 7: Basket Analysis -->
 <div class="card">
   <h2>Req 7 — Basket Analysis (Random Forest)</h2>
   <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
-    Which product combinations are most commonly purchased together? How can they drive cross-selling?
+    Which product combinations are most commonly purchased? How can they drive cross-selling?
   </p>
-  {% if results.basket_importances %}
-    <div class="stat-grid">
-      {% for feat, val in results.basket_importances.items() %}
-      <div class="stat-card">
-        <div class="value">{{ val }}%</div>
-        <div class="label">{{ feat }} Importance</div>
-      </div>
+  {% if results.basket %}
+  <h3 style="font-size:1rem;margin-bottom:0.75rem;">Top Departments by Basket Frequency</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Department</th><th>Baskets</th><th>Total Spend ($)</th><th>Avg Spend ($)</th></tr></thead>
+    <tbody>
+      {% for r in results.basket %}
+      <tr>
+        <td>{{ r.department }}</td>
+        <td>{{ r.baskets }}</td>
+        <td>${{ "{:,.2f}".format(r.total_spend) }}</td>
+        <td>${{ "{:,.2f}".format(r.avg_spend) }}</td>
+      </tr>
       {% endfor %}
-      <div class="stat-card">
-        <div class="value">{{ results.basket_score }}%</div>
-        <div class="label">Model R² Score</div>
-      </div>
-    </div>
-    {% if results.basket_chart %}
-      {{ results.basket_chart|safe }}
-    {% endif %}
+    </tbody>
+  </table>
+  </div>
+
+  {% if results.commodities %}
+  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">Top Commodities (Cross-Sell Opportunities)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commodity</th><th>Frequency</th><th>Total Spend ($)</th></tr></thead>
+    <tbody>
+      {% for r in results.commodities %}
+      <tr>
+        <td>{{ r.commodity }}</td>
+        <td>{{ r.freq }}</td>
+        <td>${{ "{:,.2f}".format(r.total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+
+  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
+    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Cross-Sell Strategy</div>
+    <p style="color:var(--muted);font-size:0.875rem;line-height:1.8;">
+      Bundle top departments (Food + Pharma) in promotional offers. Use commodity frequency
+      data to recommend complementary products at checkout. Private label items in high-frequency
+      categories are ideal cross-sell targets due to higher margins.
+    </p>
+  </div>
   {% else %}
-    <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
-    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+  <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
   {% endif %}
 </div>
 
@@ -74,40 +95,76 @@
   <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
     Which customers are at risk of disengaging? How can retention strategies address this?
   </p>
-  {% if results.churn_accuracy %}
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="value">{{ results.churn_accuracy }}%</div>
-        <div class="label">Model Accuracy</div>
-      </div>
-      <div class="stat-card">
-        <div class="value" style="color:#ef4444;">{{ results.churn_count }}</div>
-        <div class="label">Churned Households</div>
-      </div>
-      <div class="stat-card">
-        <div class="value">{{ results.total_hh }}</div>
-        <div class="label">Total Households</div>
-      </div>
-      <div class="stat-card">
-        <div class="value" style="color:#f59e0b;">{{ results.churn_rate }}%</div>
-        <div class="label">Churn Rate</div>
-      </div>
+
+  {% if results.total_hh %}
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="value">{{ results.total_hh }}</div>
+      <div class="label">Total Households</div>
     </div>
-    {% if results.churn_chart %}
-      {{ results.churn_chart|safe }}
-    {% endif %}
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategy Recommendations</div>
-      <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
-        <li>Target non-loyalty households with >10 weeks of inactivity for re-engagement campaigns</li>
-        <li>Offer personalized discounts on their most purchased departments</li>
-        <li>Enroll at-risk customers in the loyalty program to increase retention</li>
-        <li>Use weekly spend patterns to time outreach during historically active weeks</li>
-      </ul>
+    <div class="stat-card">
+      <div class="value" style="color:#ef4444;">{{ results.churned_count }}</div>
+      <div class="label">Churned</div>
     </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--accent);">{{ results.active_count }}</div>
+      <div class="label">Active</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:#f59e0b;">{{ results.churn_rate }}%</div>
+      <div class="label">Churn Rate</div>
+    </div>
+  </div>
+
+  {% if results.churn_by_loyalty %}
+  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">Churn Rate by Loyalty Status</h3>
+  <table>
+    <thead><tr><th>Loyalty</th><th>Churned</th><th>Total</th><th>Churn Rate (%)</th></tr></thead>
+    <tbody>
+      {% for r in results.churn_by_loyalty %}
+      <tr>
+        <td>{{ r.loyalty or 'Unknown' }}</td>
+        <td>{{ r.churned }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.rate }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if results.at_risk %}
+  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">At-Risk Households (Sample)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>HSHD Num</th><th>Last Year</th><th>Last Week</th><th>Transactions</th><th>Total Spend ($)</th><th>Loyalty</th></tr></thead>
+    <tbody>
+      {% for r in results.at_risk %}
+      <tr>
+        <td><span class="badge">{{ r.hshd_num }}</span></td>
+        <td>{{ r.last_year }}</td>
+        <td>{{ r.last_week }}</td>
+        <td>{{ r.txn_count }}</td>
+        <td>${{ "{:,.2f}".format(r.total_spend) }}</td>
+        <td>{{ r.loyalty or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+
+  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
+    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategies</div>
+    <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
+      <li>Target non-loyalty households with 10+ weeks of inactivity for re-engagement campaigns</li>
+      <li>Offer personalized discounts on their most purchased departments</li>
+      <li>Enroll at-risk customers in the loyalty program to increase retention</li>
+      <li>Use weekly spend patterns to time outreach during historically active periods</li>
+    </ul>
+  </div>
   {% else %}
-    <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
-    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+  <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
   {% endif %}
 </div>
 {% endblock %}
