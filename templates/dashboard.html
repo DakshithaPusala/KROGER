@@ -2,42 +2,99 @@
 {% block title %}Dashboard — Kroger Analytics{% endblock %}
 {% block content %}
 <h1>Retail Analytics Dashboard</h1>
-<p class="subtitle">Exploring customer engagement, spending trends, and brand preferences</p>
+<p class="subtitle">Customer engagement, spending trends, and brand preferences</p>
 
-{% if charts %}
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-    {% if charts.spend_time %}
-    <div class="card" style="grid-column:1/-1;">
-      <h2>Customer Engagement Over Time</h2>
-      {{ charts.spend_time|safe }}
-    </div>
-    {% endif %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
 
-    {% if charts.dept_spend %}
-    <div class="card">
-      <h2>Top Departments by Spend</h2>
-      {{ charts.dept_spend|safe }}
-    </div>
-    {% endif %}
-
-    {% if charts.loyalty %}
-    <div class="card">
-      <h2>Loyalty Program Impact</h2>
-      {{ charts.loyalty|safe }}
-    </div>
-    {% endif %}
-
-    {% if charts.brand %}
-    <div class="card">
-      <h2>Brand Preference: Private vs National</h2>
-      {{ charts.brand|safe }}
-    </div>
-    {% endif %}
-  </div>
-{% else %}
+  <!-- Spend by Year -->
   <div class="card">
-    <p style="color:var(--muted);">No data loaded yet. Please upload your CSV files first.</p>
-    <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
+    <h2>Spend by Year</h2>
+    {% if data.spend_by_year %}
+    <table>
+      <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
+      <tbody>
+        {% for r in data.spend_by_year %}
+        <tr><td>{{ r.year }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
   </div>
-{% endif %}
+
+  <!-- Loyalty Spend -->
+  <div class="card">
+    <h2>Loyalty Program Impact</h2>
+    {% if data.loyalty %}
+    <table>
+      <thead><tr><th>Loyalty</th><th>Total Spend ($)</th><th>Transactions</th></tr></thead>
+      <tbody>
+        {% for r in data.loyalty %}
+        <tr><td>{{ r.loyalty }}</td><td>${{ "{:,.2f}".format(r.total) }}</td><td>{{ r.txns }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+  <!-- Top Departments -->
+  <div class="card">
+    <h2>Top 10 Departments by Spend</h2>
+    {% if data.top_depts %}
+    <table>
+      <thead><tr><th>Department</th><th>Total Spend ($)</th></tr></thead>
+      <tbody>
+        {% for r in data.top_depts %}
+        <tr><td>{{ r.department }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+  <!-- Brand Preference -->
+  <div class="card">
+    <h2>Private vs National Brand</h2>
+    {% if data.brands %}
+    <table>
+      <thead><tr><th>Brand Type</th><th>Total Spend ($)</th></tr></thead>
+      <tbody>
+        {% for r in data.brands %}
+        <tr><td>{{ r.brand }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+  <!-- Top Commodities -->
+  <div class="card">
+    <h2>Top 10 Commodities</h2>
+    {% if data.top_commodities %}
+    <table>
+      <thead><tr><th>Commodity</th><th>Total Spend ($)</th></tr></thead>
+      <tbody>
+        {% for r in data.top_commodities %}
+        <tr><td>{{ r.commodity }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+  <!-- Region Spend -->
+  <div class="card">
+    <h2>Spend by Region</h2>
+    {% if data.regions %}
+    <table>
+      <thead><tr><th>Region</th><th>Total Spend ($)</th></tr></thead>
+      <tbody>
+        {% for r in data.regions %}
+        <tr><td>{{ r.region }}</td><td>${{ "{:,.2f}".format(r.total) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+  </div>
+
+</div>
 {% endblock %}
