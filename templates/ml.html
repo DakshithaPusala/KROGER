@@ -4,35 +4,6 @@
 <h1>Machine Learning Models</h1>
 <p class="subtitle">Basket Analysis & Churn Prediction using retail transaction data</p>
 
-<!-- ML Write-Up — Req 1 -->
-<div class="card">
-  <h2>ML Model Overview</h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Linear Regression</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
-        Predicts a continuous outcome (e.g., total spend) as a weighted sum of input features.
-        Simple, interpretable, and fast — best used for CLV estimation when relationships are straightforward.
-      </p>
-    </div>
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#3b82f6;margin-bottom:0.5rem;">Random Forest</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
-        An ensemble of decision trees that vote on the final prediction. Handles non-linear
-        patterns and mixed data types. Selected for CLV — handles demographic + transaction
-        features without requiring feature scaling.
-      </p>
-    </div>
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#f59e0b;margin-bottom:0.5rem;">Gradient Boosting</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">
-        Builds trees sequentially, each correcting errors from the previous. Highest accuracy
-        among the three. Used for churn prediction to identify at-risk customers based on
-        transaction history and loyalty behavior.
-      </p>
-    </div>
-  </div>
-</div>
 
 <!-- Req 7: Basket Analysis -->
 <div class="card">
