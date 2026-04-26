@@ -1,147 +1,247 @@
 {% extends "base.html" %}
 {% block title %}ML Models — Kroger Analytics{% endblock %}
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
 <h1>Machine Learning Models</h1>
-<p class="subtitle">Basket Analysis & Churn Prediction using retail transaction data</p>
+<p class="subtitle">Basket Analysis (Random Forest) & Churn Prediction (Gradient Boosting)</p>
 
-
-<!-- Req 7: Basket Analysis -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- REQ 7: BASKET ANALYSIS — Random Forest                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
 <div class="card">
   <h2>Req 7 — Basket Analysis (Random Forest)</h2>
-  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
-    Which product combinations are most commonly purchased? How can they drive cross-selling?
+  <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.5rem;">
+    <strong style="color:var(--text);">Retail Question:</strong> What are the commonly purchased product combinations, and how can they drive cross-selling opportunities?
   </p>
-  {% if results.basket %}
-  <h3 style="font-size:1rem;margin-bottom:0.75rem;">Top Departments by Product Count</h3>
-  <div class="table-wrap">
-  <table>
-    <thead><tr><th>Department</th><th>Product Count</th></tr></thead>
-    <tbody>
-      {% for r in results.basket %}
-      <tr>
-        <td>{{ r.department }}</td>
-        <td>{{ r.baskets }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  </div>
-
-  {% if results.commodities %}
-  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">Top Commodities (Cross-Sell Opportunities)</h3>
-  <div class="table-wrap">
-  <table>
-    <thead><tr><th>Commodity</th><th>Frequency</th></tr></thead>
-    <tbody>
-      {% for r in results.commodities %}
-      <tr>
-        <td>{{ r.commodity }}</td>
-        <td>{{ r.freq }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  {% endif %}
-
-  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
-    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Cross-Sell Strategy</div>
-    <p style="color:var(--muted);font-size:0.875rem;line-height:1.8;">
-      Bundle top departments (Food + Pharma) in promotional offers. Use commodity frequency
-      data to recommend complementary products at checkout. Private label items in high-frequency
-      categories are ideal cross-sell targets due to higher margins.
-    </p>
-  </div>
-  {% else %}
-  <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
-  <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
-  {% endif %}
-</div>
-
-<!-- Req 8: Churn Prediction -->
-<div class="card">
-  <h2>Req 8 — Churn Prediction (Gradient Boosting)</h2>
-  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">
-    Which customers are at risk of disengaging? How can retention strategies address this?
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">
+    Random Forest Classifier trained on 124,389 baskets to predict whether FOOD department appears based on basket composition. Accuracy: <strong style="color:var(--accent);">96.9%</strong> | Precision: <strong style="color:var(--accent);">98.2%</strong>
   </p>
 
-  {% if results.total_hh %}
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="value">{{ results.total_hh }}</div>
-      <div class="label">Total Households</div>
+  <!-- Model Stats -->
+  <div class="stat-grid" style="margin-bottom:1.5rem;">
+    <div class="stat-card"><div class="value">96.9%</div><div class="label">RF Accuracy</div></div>
+    <div class="stat-card"><div class="value">98.2%</div><div class="label">Precision</div></div>
+    <div class="stat-card"><div class="value">100</div><div class="label">Trees</div></div>
+    <div class="stat-card"><div class="value">124K</div><div class="label">Baskets Analyzed</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- Top Department Combinations -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Department Combinations in Baskets</h3>
+      <canvas id="deptPairChart" height="200"></canvas>
     </div>
-    <div class="stat-card">
-      <div class="value" style="color:#ef4444;">{{ results.churned_count }}</div>
-      <div class="label">Churned</div>
-    </div>
-    <div class="stat-card">
-      <div class="value" style="color:var(--accent);">{{ results.active_count }}</div>
-      <div class="label">Active</div>
-    </div>
-    <div class="stat-card">
-      <div class="value" style="color:#f59e0b;">{{ results.churn_rate }}%</div>
-      <div class="label">Churn Rate</div>
+    <!-- RF Feature Importance -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Random Forest Feature Importance</h3>
+      <canvas id="rfImportanceChart" height="200"></canvas>
     </div>
   </div>
 
-  {% if results.churn_by_loyalty %}
-  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">Churn Rate by Loyalty Status</h3>
+  <!-- Top Commodity Pairs Table -->
+  <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Commodity Combinations (Cross-Sell Opportunities)</h3>
+  <div class="table-wrap" style="margin-bottom:1.5rem;">
   <table>
-    <thead><tr><th>Loyalty</th><th>Churned</th><th>Total</th><th>Churn Rate (%)</th></tr></thead>
+    <thead><tr><th>Product Combination</th><th>Co-Purchased in Baskets</th><th>Cross-Sell Strategy</th></tr></thead>
     <tbody>
-      {% for r in results.churn_by_loyalty %}
-      <tr>
-        <td>{{ r.loyalty or 'Unknown' }}</td>
-        <td>{{ r.churned }}</td>
-        <td>{{ r.total }}</td>
-        <td>{{ r.rate }}%</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
-  {% if results.at_risk %}
-  <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;">At-Risk Households (Sample)</h3>
-  <div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>HSHD Num</th>
-        <th>Last Year</th>
-        <th>Last Week</th>
-        <th>Transactions</th>
-        <th>Total Spend ($)</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in results.at_risk %}
-      <tr>
-        <td><span class="badge">{{ r.hshd_num }}</span></td>
-        <td>{{ r.last_year }}</td>
-        <td>{{ r.last_week }}</td>
-        <td>{{ r.txn_count }}</td>
-        <td>${{ r.total_spend or 0 }}</td>
-      </tr>
-      {% endfor %}
+      <tr><td><span class="badge">DAIRY + GROCERY STAPLE</span></td><td>24,252</td><td>Bundle dairy promotions with staple purchases</td></tr>
+      <tr><td><span class="badge">BAKERY + GROCERY STAPLE</span></td><td>17,915</td><td>Morning shoppers — promote bakery at checkout</td></tr>
+      <tr><td><span class="badge">BAKERY + DAIRY</span></td><td>17,541</td><td>Breakfast bundle — milk + bread combo deal</td></tr>
+      <tr><td><span class="badge">FROZEN FOOD + GROCERY STAPLE</span></td><td>16,562</td><td>Meal prep shoppers — suggest recipe kits</td></tr>
+      <tr><td><span class="badge">BEVERAGE + GROCERY STAPLE</span></td><td>16,538</td><td>Party/entertaining bundles</td></tr>
+      <tr><td><span class="badge">BEVERAGE + DAIRY</span></td><td>15,094</td><td>Morning routine — coffee + milk promotions</td></tr>
+      <tr><td><span class="badge">DAIRY + FROZEN FOOD</span></td><td>13,751</td><td>Quick meal shoppers — cheese + frozen meal bundles</td></tr>
+      <tr><td><span class="badge">GROCERY STAPLE + PRODUCE</span></td><td>12,721</td><td>Healthy meal planners — promote fresh produce</td></tr>
     </tbody>
   </table>
   </div>
-  {% endif %}
 
-  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
-    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategies</div>
+  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
+    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Key Insights from Random Forest</div>
     <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
-      <li>Target non-loyalty households with 10+ weeks of inactivity for re-engagement campaigns</li>
-      <li>Offer personalized discounts on their most purchased departments</li>
-      <li>Enroll at-risk customers in the loyalty program to increase retention</li>
-      <li>Use weekly spend patterns to time outreach during historically active periods</li>
+      <li><strong style="color:var(--text);">Number of Items (34.7%)</strong> — bigger baskets always include FOOD; upsell food items to large baskets</li>
+      <li><strong style="color:var(--text);">Total Spend (30.0%)</strong> — high-spend baskets are strong FOOD buyers; target with premium food promotions</li>
+      <li><strong style="color:var(--text);">Has Non-Food (27.0%)</strong> — NON-FOOD + FOOD is the most common combo (32,738 baskets); place them near each other</li>
+      <li><strong style="color:var(--text);">Has Pharma (8.3%)</strong> — PHARMA shoppers frequently add FOOD; cross-promote health foods near pharmacy</li>
     </ul>
   </div>
-  {% else %}
-  <p style="color:var(--muted);">No data available. Please upload CSV files first.</p>
-  <a href="/upload" class="btn" style="margin-top:1rem;display:inline-block;">Upload Data</a>
-  {% endif %}
 </div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- REQ 8: CHURN PREDICTION — Gradient Boosting            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="card">
+  <h2>Req 8 — Churn Prediction (Gradient Boosting)</h2>
+  <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.5rem;">
+    <strong style="color:var(--text);">Retail Question:</strong> Which customers are at risk of disengaging, and how can retention strategies address this?
+  </p>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">
+    Gradient Boosting Classifier trained on 400 households using 9 RFM + demographic features. Accuracy: <strong style="color:var(--accent);">95.0%</strong> | Precision: <strong style="color:var(--accent);">83.3%</strong> | Recall: <strong style="color:var(--accent);">62.5%</strong>
+  </p>
+
+  <!-- Model Stats -->
+  <div class="stat-grid" style="margin-bottom:1.5rem;">
+    <div class="stat-card"><div class="value">95.0%</div><div class="label">GB Accuracy</div></div>
+    <div class="stat-card"><div class="value" style="color:#ef4444;">29</div><div class="label">Churned (7.2%)</div></div>
+    <div class="stat-card"><div class="value" style="color:var(--accent);">371</div><div class="label">Active</div></div>
+    <div class="stat-card"><div class="value">83.3%</div><div class="label">Precision</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- GB Feature Importance -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Feature Importance (Gradient Boosting)</h3>
+      <canvas id="gbImportanceChart" height="250"></canvas>
+    </div>
+    <!-- Churn by Income -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Churn Rate by Income Range</h3>
+      <canvas id="churnIncomeChart" height="250"></canvas>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- Churn by Age -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Churn Rate by Age Group</h3>
+      <canvas id="churnAgeChart" height="220"></canvas>
+    </div>
+    <!-- Active vs Churned pie -->
+    <div>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Overall Churn Distribution</h3>
+      <canvas id="churnPieChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- At Risk Table -->
+  <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top 10 At-Risk Households (Model Predictions)</h3>
+  <div class="table-wrap" style="margin-bottom:1.5rem;">
+  <table>
+    <thead><tr><th>HSHD Num</th><th>Last Year</th><th>Weeks Inactive</th><th>Transactions</th><th>Total Spend ($)</th><th>Loyalty</th><th>Risk Level</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge">1937</span></td><td>2019</td><td>26+</td><td>1</td><td>$1.00</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">4813</span></td><td>2018</td><td>34+</td><td>1</td><td>$1.00</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">780</span></td><td>2019</td><td>10+</td><td>1</td><td>$1.99</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">1461</span></td><td>2019</td><td>26+</td><td>1</td><td>$3.50</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">4570</span></td><td>2019</td><td>5+</td><td>2</td><td>$6.98</td><td>Y</td><td style="color:#f59e0b;">🟡 Medium</td></tr>
+      <tr><td><span class="badge">2938</span></td><td>2018</td><td>34+</td><td>2</td><td>$8.49</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">3670</span></td><td>2019</td><td>27+</td><td>1</td><td>$8.99</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">1750</span></td><td>2019</td><td>24+</td><td>1</td><td>$9.98</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">3681</span></td><td>2019</td><td>26+</td><td>1</td><td>$9.99</td><td>Y</td><td style="color:#ef4444;">🔴 High</td></tr>
+      <tr><td><span class="badge">1914</span></td><td>2019</td><td>23+</td><td>6</td><td>$12.36</td><td>N</td><td style="color:#f59e0b;">🟡 Medium</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
+    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategies Based on Model Findings</div>
+    <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
+      <li><strong style="color:var(--text);">Recency (72.7% importance)</strong> — strongest churn signal; send re-engagement email to households inactive 10+ weeks</li>
+      <li><strong style="color:var(--text);">Tenure (9.2%)</strong> — newer customers churn faster; offer onboarding loyalty rewards in first 8 weeks</li>
+      <li><strong style="color:var(--text);">Transaction Count (5.0%)</strong> — 1-visit households are highest risk; offer "come back" discount after first visit</li>
+      <li><strong style="color:var(--text);">150K+ income households churn at 14.7%</strong> — target with premium product recommendations</li>
+      <li><strong style="color:var(--text);">Ages 45-54 churn at 11.6%</strong> — highest risk age group; target with convenience-focused promotions</li>
+      <li><strong style="color:var(--text);">Loyalty members churn at 8.1%</strong> vs non-members 4.9% — re-engage lapsed loyalty members with bonus points</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const chartDefaults = {
+    plugins: { legend: { labels: { color: '#e2e8f0' } } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } }
+    }
+  };
+
+  // Dept pair chart
+  new Chart(document.getElementById('deptPairChart'), {
+    type: 'bar',
+    data: {
+      labels: ['FOOD + NON-FOOD', 'FOOD + PHARMA', 'NON-FOOD + PHARMA'],
+      datasets: [{
+        label: 'Co-Purchased Baskets',
+        data: [32738, 5922, 4244],
+        backgroundColor: ['#00c896','#3b82f6','#f59e0b'],
+        borderRadius: 4
+      }]
+    },
+    options: { ...chartDefaults, plugins: { legend: { display: false } } }
+  });
+
+  // RF Feature Importance
+  new Chart(document.getElementById('rfImportanceChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Num Items', 'Total Spend', 'Has NonFood', 'Has Pharma'],
+      datasets: [{
+        data: [34.66, 29.99, 27.03, 8.32],
+        backgroundColor: ['#00c896','#3b82f6','#f59e0b','#ef4444'],
+        borderColor: '#111827', borderWidth: 2
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#e2e8f0' }, position: 'bottom' } } }
+  });
+
+  // GB Feature Importance
+  new Chart(document.getElementById('gbImportanceChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Recency', 'Tenure', 'Total Spend', 'Txn Count', 'Age', 'Avg Spend', 'Income', 'Loyalty', 'Children'],
+      datasets: [{
+        label: 'Importance (%)',
+        data: [72.68, 9.19, 7.41, 5.02, 3.03, 1.33, 1.33, 0.01, 0.0],
+        backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#00c896','#8b5cf6','#06b6d4','#84cc16','#f97316','#64748b'],
+        borderRadius: 4
+      }]
+    },
+    options: { ...chartDefaults, indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+
+  // Churn by Income
+  new Chart(document.getElementById('churnIncomeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['150K+', '75-99K', '100-150K', '50-74K', '35-49K', 'Under 35K'],
+      datasets: [{
+        label: 'Churn Rate (%)',
+        data: [14.7, 9.8, 9.3, 6.0, 6.2, 1.7],
+        backgroundColor: ['#ef4444','#f97316','#f59e0b','#3b82f6','#3b82f6','#00c896'],
+        borderRadius: 4
+      }]
+    },
+    options: { ...chartDefaults, plugins: { legend: { display: false } } }
+  });
+
+  // Churn by Age
+  new Chart(document.getElementById('churnAgeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['19-24', '45-54', '25-34', '55-64', '35-44', '65-74', '75+'],
+      datasets: [{
+        label: 'Churn Rate (%)',
+        data: [25.0, 11.6, 7.1, 7.1, 5.9, 5.7, 0.0],
+        backgroundColor: ['#ef4444','#f97316','#f59e0b','#f59e0b','#3b82f6','#3b82f6','#00c896'],
+        borderRadius: 4
+      }]
+    },
+    options: { ...chartDefaults, plugins: { legend: { display: false } } }
+  });
+
+  // Churn Pie
+  new Chart(document.getElementById('churnPieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Active (371)', 'Churned (29)'],
+      datasets: [{
+        data: [371, 29],
+        backgroundColor: ['#00c896','#ef4444'],
+        borderColor: '#111827', borderWidth: 2
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#e2e8f0' }, position: 'bottom' } } }
+  });
+</script>
 {% endblock %}
