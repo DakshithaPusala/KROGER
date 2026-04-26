@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Kroger Analytics{% endblock %}
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
 <h1>Retail Analytics Dashboard</h1>
 <p class="subtitle">Exploring customer engagement, spending trends, demographics, and brand preferences</p>
 
@@ -11,69 +13,27 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
       <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Annual Spend Trend</h3>
-      {% if data.spend_by_year %}
-      <table>
-        <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
-        <tbody>
-          {% for r in data.spend_by_year %}
-          <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p style="color:var(--muted)">No data yet. Upload CSV files first.</p>{% endif %}
+      <canvas id="spendYearChart" height="220"></canvas>
     </div>
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Product Categories</h3>
-      {% if data.top_depts %}
-      <table>
-        <thead><tr><th>Department</th><th>Products</th></tr></thead>
-        <tbody>
-          {% for r in data.top_depts %}
-          <tr><td>{{ r.department }}</td><td>{{ r.count }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Product Departments</h3>
+      <canvas id="deptChart" height="220"></canvas>
     </div>
   </div>
 </div>
 
-<!-- Q2: Demographics and Engagement -->
+<!-- Q2: Demographics -->
 <div class="card">
   <h2>👥 Demographics & Engagement</h2>
-  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do factors like household size, presence of children, location, and income affect customer engagement?</p>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do factors like location and loyalty affect customer engagement?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
       <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Spend by Region</h3>
-      {% if data.regions %}
-      <table>
-        <thead><tr><th>Region</th><th>Total Spend ($)</th></tr></thead>
-        <tbody>
-          {% for r in data.regions %}
-          <tr><td>{{ r.region }}</td><td>${{ r.total }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      <canvas id="regionChart" height="220"></canvas>
     </div>
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Loyalty Program Engagement</h3>
-      {% if data.loyalty %}
-      <table>
-        <thead><tr><th>Loyalty Member</th><th>Households</th></tr></thead>
-        <tbody>
-          {% for r in data.loyalty %}
-          <tr>
-            <td>{{ 'Yes (Y)' if r.loyalty == 'Y' else 'No (N)' }}</td>
-            <td>{{ r.total_hh }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem;">
-        Loyalty members drive the majority of household engagement and spending.
-      </p>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Loyalty Program Breakdown</h3>
+      <canvas id="loyaltyChart" height="220"></canvas>
     </div>
   </div>
 </div>
@@ -82,93 +42,193 @@
 <div class="card">
   <h2>🛒 Basket Analysis</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">What product combinations drive cross-selling opportunities?</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Most Purchased Commodities</h3>
-      {% if data.top_commodities %}
-      <table>
-        <thead><tr><th>Commodity</th><th>Products</th></tr></thead>
-        <tbody>
-          {% for r in data.top_commodities %}
-          <tr><td>{{ r.commodity }}</td><td>{{ r.count }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Commodities by Frequency</h3>
+      <canvas id="commodityChart" height="250"></canvas>
     </div>
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
       <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Cross-Sell Insights</div>
-      <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
-        <li><strong style="color:var(--text)">Grocery + Household:</strong> Most common combo — bundle with discount</li>
-        <li><strong style="color:var(--text)">Personal Care + Pharma:</strong> Cross-promote health items</li>
-        <li><strong style="color:var(--text)">Frozen + Produce:</strong> Suggest recipe bundles for meal planners</li>
-        <li><strong style="color:var(--text)">Bakery + Dairy:</strong> Promote together at checkout</li>
+      <ul style="color:var(--muted);font-size:0.82rem;line-height:1.9;padding-left:1.2rem;">
+        <li><strong style="color:var(--text)">Grocery + Household:</strong> Bundle with discount</li>
+        <li><strong style="color:var(--text)">Personal Care + Pharma:</strong> Cross-promote</li>
+        <li><strong style="color:var(--text)">Frozen + Produce:</strong> Recipe bundles</li>
+        <li><strong style="color:var(--text)">Bakery + Dairy:</strong> Morning checkout promo</li>
       </ul>
     </div>
   </div>
 </div>
 
-<!-- Q4: Seasonal Trends -->
-<div class="card">
-  <h2>📅 Seasonal Trends</h2>
-  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do seasonal patterns inform inventory and promotions?</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-    <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Spend by Year</h3>
-      {% if data.spend_by_year %}
-      <table>
-        <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
-        <tbody>
-          {% for r in data.spend_by_year %}
-          <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
-    </div>
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Seasonal Recommendations</div>
-      <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
-        <li><strong style="color:var(--text)">2018→2019:</strong> Significant spend growth — scale inventory</li>
-        <li><strong style="color:var(--text)">2019→2020:</strong> Spend declined — run promotions to boost engagement</li>
-        <li><strong style="color:var(--text)">Q4 planning:</strong> Stock Grocery Staples and Household items heavily</li>
-        <li><strong style="color:var(--text)">Promotions:</strong> Target slow periods with loyalty member discounts</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- Q5: Brand Preferences -->
+<!-- Q4: Brand Preferences -->
 <div class="card">
   <h2>🏷️ Brand Preferences</h2>
-  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">What are customer preferences for private vs. national brands and organic items?</p>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">What are customer preferences for private vs. national brands?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
       <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Private vs National Brand</h3>
-      {% if data.brands %}
-      <table>
-        <thead><tr><th>Brand Type</th><th>Products</th></tr></thead>
-        <tbody>
-          {% for r in data.brands %}
-          <tr><td>{{ r.brand }}</td><td>{{ r.count }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem;">
-        National brands dominate but private label is a growth opportunity — especially in Grocery and Household categories.
-      </p>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      <canvas id="brandChart" height="250"></canvas>
     </div>
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Brand Strategy Insights</div>
-      <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
-        <li><strong style="color:var(--text)">National brands</strong> preferred for Pharma and Personal Care</li>
-        <li><strong style="color:var(--text)">Private label</strong> opportunity in Grocery Staples — higher margins</li>
+      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Brand Strategy</div>
+      <ul style="color:var(--muted);font-size:0.82rem;line-height:1.9;padding-left:1.2rem;">
+        <li><strong style="color:var(--text)">National brands</strong> preferred for Pharma & Personal Care</li>
+        <li><strong style="color:var(--text)">Private label</strong> opportunity in Grocery — higher margins</li>
         <li><strong style="color:var(--text)">Organic items</strong> growing in Produce and Dairy</li>
-        <li><strong style="color:var(--text)">Loyalty members</strong> more open to private label recommendations</li>
+        <li><strong style="color:var(--text)">Loyalty members</strong> more open to private label</li>
       </ul>
     </div>
   </div>
 </div>
 
+<!-- Q5: Seasonal Trends -->
+<div class="card">
+  <h2>📅 Seasonal Trends</h2>
+  <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do seasonal patterns inform inventory and promotions?</p>
+  <canvas id="seasonChart" height="180"></canvas>
+</div>
+
+<script>
+  // Data from Flask
+  const spendByYear = {{ data.spend_by_year | tojson }};
+  const topDepts = {{ data.top_depts | tojson }};
+  const regions = {{ data.regions | tojson }};
+  const loyalty = {{ data.loyalty | tojson }};
+  const commodities = {{ data.top_commodities | tojson }};
+  const brands = {{ data.brands | tojson }};
+
+  const chartDefaults = {
+    plugins: { legend: { labels: { color: '#e2e8f0', font: { family: 'DM Sans' } } } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } }
+    }
+  };
+
+  // 1. Spend by Year — Line chart
+  if (spendByYear.length) {
+    new Chart(document.getElementById('spendYearChart'), {
+      type: 'line',
+      data: {
+        labels: spendByYear.map(r => r.year),
+        datasets: [{
+          label: 'Total Spend ($)',
+          data: spendByYear.map(r => r.total),
+          borderColor: '#00c896',
+          backgroundColor: 'rgba(0,200,150,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#00c896',
+          pointRadius: 5
+        }]
+      },
+      options: { ...chartDefaults, plugins: { ...chartDefaults.plugins } }
+    });
+  }
+
+  // 2. Top Departments — Horizontal bar
+  if (topDepts.length) {
+    new Chart(document.getElementById('deptChart'), {
+      type: 'bar',
+      data: {
+        labels: topDepts.map(r => r.department),
+        datasets: [{
+          label: 'Products',
+          data: topDepts.map(r => r.count),
+          backgroundColor: ['#00c896','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16','#f97316','#ec4899','#14b8a6'],
+        }]
+      },
+      options: { ...chartDefaults, indexAxis: 'y' }
+    });
+  }
+
+  // 3. Region — Bar chart
+  if (regions.length) {
+    new Chart(document.getElementById('regionChart'), {
+      type: 'bar',
+      data: {
+        labels: regions.map(r => r.region),
+        datasets: [{
+          label: 'Total Spend ($)',
+          data: regions.map(r => r.total),
+          backgroundColor: ['#00c896','#3b82f6','#f59e0b','#ef4444'],
+        }]
+      },
+      options: chartDefaults
+    });
+  }
+
+  // 4. Loyalty — Doughnut
+  if (loyalty.length) {
+    new Chart(document.getElementById('loyaltyChart'), {
+      type: 'doughnut',
+      data: {
+        labels: loyalty.map(r => r.loyalty === 'Y' ? 'Loyalty Member' : 'Non-Member'),
+        datasets: [{
+          data: loyalty.map(r => r.total_hh),
+          backgroundColor: ['#00c896','#1e2d40'],
+          borderColor: ['#00c896','#3b82f6'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#e2e8f0' }, position: 'bottom' } }
+      }
+    });
+  }
+
+  // 5. Commodities — Horizontal bar
+  if (commodities.length) {
+    new Chart(document.getElementById('commodityChart'), {
+      type: 'bar',
+      data: {
+        labels: commodities.map(r => r.commodity),
+        datasets: [{
+          label: 'Frequency',
+          data: commodities.map(r => r.count),
+          backgroundColor: 'rgba(59,130,246,0.7)',
+          borderColor: '#3b82f6',
+          borderWidth: 1
+        }]
+      },
+      options: { ...chartDefaults, indexAxis: 'y' }
+    });
+  }
+
+  // 6. Brand — Pie chart
+  if (brands.length) {
+    new Chart(document.getElementById('brandChart'), {
+      type: 'pie',
+      data: {
+        labels: brands.map(r => r.brand),
+        datasets: [{
+          data: brands.map(r => r.count),
+          backgroundColor: ['#3b82f6','#00c896','#f59e0b','#ef4444'],
+          borderColor: '#111827',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#e2e8f0' }, position: 'bottom' } }
+      }
+    });
+  }
+
+  // 7. Seasonal — Line chart (same as spend by year but styled differently)
+  if (spendByYear.length) {
+    new Chart(document.getElementById('seasonChart'), {
+      type: 'bar',
+      data: {
+        labels: spendByYear.map(r => r.year),
+        datasets: [{
+          label: 'Annual Spend ($)',
+          data: spendByYear.map(r => r.total),
+          backgroundColor: ['rgba(0,200,150,0.6)','rgba(59,130,246,0.6)','rgba(245,158,11,0.6)'],
+          borderColor: ['#00c896','#3b82f6','#f59e0b'],
+          borderWidth: 2
+        }]
+      },
+      options: chartDefaults
+    });
+  }
+</script>
 {% endblock %}
