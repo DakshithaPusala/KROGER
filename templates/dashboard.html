@@ -214,10 +214,7 @@
       <canvas id="churnAgeChart" height="200"></canvas>
     </div>
   </div>
-  <div style="margin-top:1rem;">
-    <div style="font-size:0.8rem;color:#64748b;margin-bottom:0.5rem;">Gradient Boosting Feature Importance (%)</div>
-    <canvas id="gbFeatureChart" height="120"></canvas>
-  </div>
+
 </div>
 
 <script>
@@ -369,13 +366,5 @@ new Chart(document.getElementById('churnAgeChart'), {
   options: cd
 });
 
-new Chart(document.getElementById('gbFeatureChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Recency','Tenure','Total Spend','Txn Count','Age','Avg Spend','Income','Loyalty','Children'],
-    datasets: [{ data: [72.68,9.19,7.41,5.02,3.03,1.33,1.33,0.01,0.0], backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#00c896','#8b5cf6','#06b6d4','#84cc16','#f97316','#64748b'], borderRadius: 4 }]
-  },
-  options: { ...cd, indexAxis: 'y' }
-});
 </script>
 {% endblock %}
