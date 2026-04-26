@@ -6,31 +6,27 @@
 
 <!-- Q1: Engagement Over Time -->
 <div class="card">
-  <h2>Engagement Over Time</h2>
+  <h2>📈 Engagement Over Time</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Are households spending more or less? Which product categories are changing in popularity?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Annual Spend Trend</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Annual Spend Trend</h3>
       {% if data.spend_by_year %}
       <table>
-        <thead><tr><th>Year</th><th>Total Spend ($)</th><th>Trend</th></tr></thead>
+        <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
         <tbody>
           {% for r in data.spend_by_year %}
-          <tr>
-            <td>{{ r.year }}</td>
-            <td>${{ r.total }}</td>
-            <td>{% if loop.index == 1 %}—{% elif r.total > data.spend_by_year[loop.index0-1].total %}📈 Up{% else %}📉 Down{% endif %}</td>
-          </tr>
+          <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
-      {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
+      {% else %}<p style="color:var(--muted)">No data yet. Upload CSV files first.</p>{% endif %}
     </div>
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Top Product Categories by Popularity</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top Product Categories</h3>
       {% if data.top_depts %}
       <table>
-        <thead><tr><th>Department</th><th>Product Count</th></tr></thead>
+        <thead><tr><th>Department</th><th>Products</th></tr></thead>
         <tbody>
           {% for r in data.top_depts %}
           <tr><td>{{ r.department }}</td><td>{{ r.count }}</td></tr>
@@ -44,11 +40,11 @@
 
 <!-- Q2: Demographics and Engagement -->
 <div class="card">
-  <h2>Demographics & Engagement</h2>
+  <h2>👥 Demographics & Engagement</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do factors like household size, presence of children, location, and income affect customer engagement?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Spend by Region (Location Impact)</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Spend by Region</h3>
       {% if data.regions %}
       <table>
         <thead><tr><th>Region</th><th>Total Spend ($)</th></tr></thead>
@@ -61,23 +57,21 @@
       {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
     </div>
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Loyalty Program Engagement</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Loyalty Program Engagement</h3>
       {% if data.loyalty %}
       <table>
-        <thead><tr><th>Loyalty Member</th><th>Households</th><th>% of Total</th></tr></thead>
+        <thead><tr><th>Loyalty Member</th><th>Households</th></tr></thead>
         <tbody>
-          {% set total_hh = data.loyalty | sum(attribute='total_hh') %}
           {% for r in data.loyalty %}
           <tr>
-            <td>{{ 'Yes' if r.loyalty == 'Y' else 'No' }}</td>
+            <td>{{ 'Yes (Y)' if r.loyalty == 'Y' else 'No (N)' }}</td>
             <td>{{ r.total_hh }}</td>
-            <td>{{ ((r.total_hh / total_hh) * 100) | round(1) }}%</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
       <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem;">
-        297 loyalty members (74%) vs 103 non-members (26%) — loyalty members drive the majority of engagement.
+        Loyalty members drive the majority of household engagement and spending.
       </p>
       {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
     </div>
@@ -86,11 +80,11 @@
 
 <!-- Q3: Basket Analysis -->
 <div class="card">
-  <h2>Basket Analysis</h2>
+  <h2>🛒 Basket Analysis</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">What product combinations drive cross-selling opportunities?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Most Purchased Commodities</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Most Purchased Commodities</h3>
       {% if data.top_commodities %}
       <table>
         <thead><tr><th>Commodity</th><th>Products</th></tr></thead>
@@ -103,12 +97,12 @@
       {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
     </div>
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Cross-Sell Insight</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Cross-Sell Insights</div>
       <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
-        <li><strong style="color:var(--text)">Grocery Staple + Household:</strong> Most common combo — bundle with discount</li>
-        <li><strong style="color:var(--text)">Personal Care + Pharma:</strong> Health-focused shoppers — cross-promote</li>
-        <li><strong style="color:var(--text)">Frozen Food + Produce:</strong> Meal planners — suggest recipe bundles</li>
-        <li><strong style="color:var(--text)">Bakery + Dairy:</strong> Morning shoppers — promote together at checkout</li>
+        <li><strong style="color:var(--text)">Grocery + Household:</strong> Most common combo — bundle with discount</li>
+        <li><strong style="color:var(--text)">Personal Care + Pharma:</strong> Cross-promote health items</li>
+        <li><strong style="color:var(--text)">Frozen + Produce:</strong> Suggest recipe bundles for meal planners</li>
+        <li><strong style="color:var(--text)">Bakery + Dairy:</strong> Promote together at checkout</li>
       </ul>
     </div>
   </div>
@@ -116,29 +110,17 @@
 
 <!-- Q4: Seasonal Trends -->
 <div class="card">
-  <h2>Seasonal Trends</h2>
+  <h2>📅 Seasonal Trends</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">How do seasonal patterns inform inventory and promotions?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Yearly Spend Pattern</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Spend by Year</h3>
       {% if data.spend_by_year %}
       <table>
-        <thead><tr><th>Year</th><th>Total Spend ($)</th><th>YoY Change</th></tr></thead>
+        <thead><tr><th>Year</th><th>Total Spend ($)</th></tr></thead>
         <tbody>
           {% for r in data.spend_by_year %}
-          <tr>
-            <td>{{ r.year }}</td>
-            <td>${{ r.total }}</td>
-            <td>
-              {% if loop.index == 1 %}—
-              {% else %}
-                {% set prev = data.spend_by_year[loop.index0-1].total %}
-                {% set change = ((r.total - prev) / prev * 100) | round(1) %}
-                {% if change > 0 %}<span style="color:var(--accent)">+{{ change }}%</span>
-                {% else %}<span style="color:#ef4444">{{ change }}%</span>{% endif %}
-              {% endif %}
-            </td>
-          </tr>
+          <tr><td>{{ r.year }}</td><td>${{ r.total }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -147,8 +129,8 @@
     <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
       <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.75rem;">Seasonal Recommendations</div>
       <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
-        <li><strong style="color:var(--text)">2018→2019:</strong> Spend grew 163% — scale inventory for peak demand</li>
-        <li><strong style="color:var(--text)">2019→2020:</strong> Spend declined 33% — run promotions to boost engagement</li>
+        <li><strong style="color:var(--text)">2018→2019:</strong> Significant spend growth — scale inventory</li>
+        <li><strong style="color:var(--text)">2019→2020:</strong> Spend declined — run promotions to boost engagement</li>
         <li><strong style="color:var(--text)">Q4 planning:</strong> Stock Grocery Staples and Household items heavily</li>
         <li><strong style="color:var(--text)">Promotions:</strong> Target slow periods with loyalty member discounts</li>
       </ul>
@@ -158,27 +140,22 @@
 
 <!-- Q5: Brand Preferences -->
 <div class="card">
-  <h2>Brand Preferences</h2>
+  <h2>🏷️ Brand Preferences</h2>
   <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">What are customer preferences for private vs. national brands and organic items?</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
     <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text);">Private vs National Brand</h3>
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Private vs National Brand</h3>
       {% if data.brands %}
       <table>
-        <thead><tr><th>Brand Type</th><th>Products</th><th>Market Share</th></tr></thead>
+        <thead><tr><th>Brand Type</th><th>Products</th></tr></thead>
         <tbody>
-          {% set total_brands = data.brands | sum(attribute='count') %}
           {% for r in data.brands %}
-          <tr>
-            <td>{{ r.brand }}</td>
-            <td>{{ r.count }}</td>
-            <td>{{ ((r.count / total_brands) * 100) | round(1) }}%</td>
-          </tr>
+          <tr><td>{{ r.brand }}</td><td>{{ r.count }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
       <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem;">
-        National brands dominate (80%) but private label is growing — opportunity to expand private label in Grocery Staple and Household categories.
+        National brands dominate but private label is a growth opportunity — especially in Grocery and Household categories.
       </p>
       {% else %}<p style="color:var(--muted)">No data yet.</p>{% endif %}
     </div>
@@ -187,7 +164,7 @@
       <ul style="color:var(--muted);font-size:0.85rem;line-height:1.9;padding-left:1.2rem;">
         <li><strong style="color:var(--text)">National brands</strong> preferred for Pharma and Personal Care</li>
         <li><strong style="color:var(--text)">Private label</strong> opportunity in Grocery Staples — higher margins</li>
-        <li><strong style="color:var(--text)">Organic items</strong> growing in Produce and Dairy — stock accordingly</li>
+        <li><strong style="color:var(--text)">Organic items</strong> growing in Produce and Dairy</li>
         <li><strong style="color:var(--text)">Loyalty members</strong> more open to private label recommendations</li>
       </ul>
     </div>
