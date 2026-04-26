@@ -1,227 +1,256 @@
 {% extends "base.html" %}
-{% block title %}ML Models — Kroger Analytics{% endblock %}
+{% block title %}Dashboard — Kroger Analytics{% endblock %}
 {% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-<h1>Machine Learning Models</h1>
-<p class="subtitle">Basket Analysis (Random Forest) & Churn Prediction (Gradient Boosting)</p>
+<h1>Retail Analytics Dashboard</h1>
+<p class="subtitle">Customer Engagement · Segmentation · Loyalty Impact · Customer Lifetime Value</p>
 
-<!-- ML Write-Up -->
-<div class="card">
-  <h2>ML Model Overview</h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Linear Regression</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">Predicts a continuous outcome as a weighted sum of input features. Simple and interpretable — best used for CLV estimation when relationships are straightforward.</p>
-    </div>
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#3b82f6;margin-bottom:0.5rem;">Random Forest ✓ Used</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">Ensemble of decision trees trained on 737,606 transaction records. Used for Basket Analysis — identifies which product features drive purchasing combinations. R² Score: 100%.</p>
-    </div>
-    <div style="background:#0f172a;border-radius:8px;padding:1.2rem;border:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;color:#f59e0b;margin-bottom:0.5rem;">Gradient Boosting ✓ Used</div>
-      <p style="font-size:0.8rem;color:var(--muted);line-height:1.6;">Sequential tree ensemble trained on 400 household profiles. Used for Churn Prediction — identifies at-risk customers from RFM features. Accuracy: 95%.</p>
-    </div>
+<!-- KPI STRIP -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+  <div style="background:linear-gradient(135deg,#0f2027,#203a43);border:1px solid #00c896;border-radius:12px;padding:1.2rem;text-align:center;">
+    <div style="font-size:0.72rem;color:#00c896;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.3rem;">Total Revenue</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;">$3.53M</div>
+    <div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">2018 – 2020</div>
+  </div>
+  <div style="background:linear-gradient(135deg,#0f2027,#203a43);border:1px solid #3b82f6;border-radius:12px;padding:1.2rem;text-align:center;">
+    <div style="font-size:0.72rem;color:#3b82f6;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.3rem;">Total Households</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;">400</div>
+    <div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">297 Loyalty Members</div>
+  </div>
+  <div style="background:linear-gradient(135deg,#0f2027,#203a43);border:1px solid #f59e0b;border-radius:12px;padding:1.2rem;text-align:center;">
+    <div style="font-size:0.72rem;color:#f59e0b;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.3rem;">Avg Spend / HH</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;">$8,826</div>
+    <div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">Loyalty: $10,190</div>
+  </div>
+  <div style="background:linear-gradient(135deg,#0f2027,#203a43);border:1px solid #ef4444;border-radius:12px;padding:1.2rem;text-align:center;">
+    <div style="font-size:0.72rem;color:#ef4444;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.3rem;">Churn Rate</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;">7.2%</div>
+    <div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">29 at-risk households</div>
   </div>
 </div>
 
-<!-- Req 7: Basket Analysis -->
-<div class="card">
-  <h2>Req 7 — Basket Analysis (Random Forest)</h2>
-  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1.5rem;">
-    Trained on 922,008 transactions. Random Forest identifies which product features most strongly predict department purchasing patterns.
-  </p>
+<!-- ROW 1: Spend Trend + Dept Growth + Loyalty Comparison -->
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
-    <!-- Feature Importance Chart -->
-    <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Feature Importance (Random Forest)</h3>
-      <canvas id="featureChart" height="220"></canvas>
-    </div>
-    <!-- Department Basket Frequency -->
-    <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Department Basket Frequency</h3>
-      <canvas id="basketDeptChart" height="220"></canvas>
-    </div>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">📈 Annual Spend Trend (Q1)</div>
+    <canvas id="spendTrendChart" height="160"></canvas>
   </div>
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="value">100%</div>
-      <div class="label">R² Score</div>
-    </div>
-    <div class="stat-card">
-      <div class="value">922K</div>
-      <div class="label">Training Records</div>
-    </div>
-    <div class="stat-card">
-      <div class="value">100</div>
-      <div class="label">Trees in Forest</div>
-    </div>
-    <div class="stat-card">
-      <div class="value">79,722</div>
-      <div class="label">Food Baskets</div>
-    </div>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">📦 Dept Growth 2018→2020</div>
+    <canvas id="deptGrowthChart" height="160"></canvas>
   </div>
 
-  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
-    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Cross-Sell Strategy (from model insights)</div>
-    <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
-      <li>Department is the strongest predictor (100% importance) — target promotions at department level</li>
-      <li>FOOD appears in 79,722 baskets — bundle with NON-FOOD for cross-sell</li>
-      <li>PHARMA shoppers (6,917 baskets) are high-value — cross-promote with FOOD</li>
-      <li>Private label items in FOOD have higher margins — recommend at checkout</li>
-    </ul>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🏆 Loyalty vs Non-Loyalty (Q3)</div>
+    <canvas id="loyaltyCompareChart" height="160"></canvas>
   </div>
+
 </div>
 
-<!-- Req 8: Churn Prediction -->
-<div class="card">
-  <h2>Req 8 — Churn Prediction (Gradient Boosting)</h2>
-  <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1.5rem;">
-    Trained on 400 household profiles with 6 RFM features. Gradient Boosting identifies at-risk customers before they disengage.
-  </p>
+<!-- ROW 2: Customer Segments + CLV Distribution + Loyalty Trips -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
 
-  <div class="stat-grid" style="margin-bottom:1.5rem;">
-    <div class="stat-card">
-      <div class="value">95%</div>
-      <div class="label">Model Accuracy</div>
-    </div>
-    <div class="stat-card">
-      <div class="value">400</div>
-      <div class="label">Total Households</div>
-    </div>
-    <div class="stat-card" >
-      <div class="value" style="color:#ef4444;">29</div>
-      <div class="label">Churned (7.2%)</div>
-    </div>
-    <div class="stat-card">
-      <div class="value" style="color:var(--accent);">371</div>
-      <div class="label">Active</div>
-    </div>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">👥 Customer Segments (Q2)</div>
+    <canvas id="segmentChart" height="180"></canvas>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
-    <!-- GB Feature Importance -->
-    <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Feature Importance (Gradient Boosting)</h3>
-      <canvas id="gbFeatureChart" height="250"></canvas>
-    </div>
-    <!-- Churn by Loyalty -->
-    <div>
-      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Churn Rate by Loyalty Status</h3>
-      <canvas id="churnLoyaltyChart" height="250"></canvas>
-    </div>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💰 CLV Segment Distribution (Q4)</div>
+    <canvas id="clvPieChart" height="180"></canvas>
   </div>
 
-  <!-- At Risk Table -->
-  <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Top 10 At-Risk Households</h3>
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🔁 Purchase Frequency (Q3)</div>
+    <canvas id="freqChart" height="180"></canvas>
+  </div>
+
+</div>
+
+<!-- ROW 3: Segment Spend + CLV Bar + Spend by Region -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💵 Avg Spend by Segment (Q2)</div>
+    <canvas id="segSpendChart" height="180"></canvas>
+  </div>
+
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">⭐ Avg CLV by Tier (Q4)</div>
+    <canvas id="clvBarChart" height="180"></canvas>
+  </div>
+
+  <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🗺️ Spend by Region</div>
+    <canvas id="regionChart" height="180"></canvas>
+  </div>
+
+</div>
+
+<!-- ROW 4: Segment Table -->
+<div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;margin-bottom:1rem;">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">👥 Customer Segment Profiles (Q2) — KMeans Clustering (k=4)</div>
   <div class="table-wrap">
   <table>
-    <thead>
-      <tr><th>HSHD Num</th><th>Last Year</th><th>Last Week</th><th>Transactions</th><th>Total Spend ($)</th><th>Loyalty</th></tr>
-    </thead>
+    <thead><tr><th>Segment</th><th>Households</th><th>Avg Total Spend</th><th>Avg Transactions</th><th>Avg Basket ($)</th><th>Loyalty %</th><th>Profile</th><th>Strategy</th></tr></thead>
     <tbody>
-      <tr><td><span class="badge">1937</span></td><td>2019</td><td>26</td><td>1</td><td>$1.00</td><td>Y</td></tr>
-      <tr><td><span class="badge">4813</span></td><td>2018</td><td>34</td><td>1</td><td>$1.00</td><td>Y</td></tr>
-      <tr><td><span class="badge">780</span></td><td>2019</td><td>10</td><td>1</td><td>$1.99</td><td>Y</td></tr>
-      <tr><td><span class="badge">1461</span></td><td>2019</td><td>26</td><td>1</td><td>$3.50</td><td>Y</td></tr>
-      <tr><td><span class="badge">4570</span></td><td>2019</td><td>5</td><td>2</td><td>$6.98</td><td>Y</td></tr>
-      <tr><td><span class="badge">2938</span></td><td>2018</td><td>34</td><td>2</td><td>$8.49</td><td>Y</td></tr>
-      <tr><td><span class="badge">3670</span></td><td>2019</td><td>27</td><td>1</td><td>$8.99</td><td>Y</td></tr>
-      <tr><td><span class="badge">1750</span></td><td>2019</td><td>24</td><td>1</td><td>$9.98</td><td>Y</td></tr>
-      <tr><td><span class="badge">3681</span></td><td>2019</td><td>26</td><td>1</td><td>$9.99</td><td>Y</td></tr>
-      <tr><td><span class="badge">1914</span></td><td>2019</td><td>23</td><td>6</td><td>$12.36</td><td>N</td></tr>
+      <tr><td><span class="badge">Seg 0</span></td><td>189</td><td>$6,378</td><td>135</td><td>$3.74</td><td>100%</td><td style="color:var(--accent);">💚 Loyal Mid-Spenders</td><td>Upsell to premium</td></tr>
+      <tr><td><span class="badge">Seg 1</span></td><td>99</td><td>$4,864</td><td>192</td><td>$3.61</td><td>0%</td><td style="color:#f59e0b;">🟡 Frequent Non-Loyal</td><td>Enroll in loyalty</td></tr>
+      <tr><td><span class="badge">Seg 2</span></td><td>101</td><td>$17,946</td><td>397</td><td>$4.04</td><td>100%</td><td style="color:#3b82f6;">💎 Champions</td><td>VIP rewards</td></tr>
+      <tr><td><span class="badge">Seg 3</span></td><td>11</td><td>$2,451</td><td>61</td><td>$9.49</td><td>64%</td><td style="color:#ef4444;">⚠️ Low-Freq</td><td>Re-engagement</td></tr>
     </tbody>
   </table>
   </div>
+</div>
 
-  <div style="background:#0f172a;border-radius:8px;padding:1.2rem;margin-top:1rem;border:1px solid var(--border);">
-    <div style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">Retention Strategies (from model insights)</div>
-    <ul style="color:var(--muted);font-size:0.875rem;line-height:1.8;padding-left:1.2rem;">
-      <li><strong style="color:var(--text)">Last Week (76.8% importance)</strong> — recency is the strongest churn signal; target households inactive 10+ weeks</li>
-      <li><strong style="color:var(--text)">Transaction Count (11.2%)</strong> — low-frequency households churn faster; offer incentives after 2nd purchase</li>
-      <li><strong style="color:var(--text)">Loyalty members churn at 8.1%</strong> vs non-members at 4.9% — re-engage with personalized offers</li>
-      <li><strong style="color:var(--text)">Total Spend (6.3%)</strong> — low-spend churners need value-focused promotions</li>
-    </ul>
+<!-- ROW 5: Top CLV Customers -->
+<div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💰 Top 5 Highest CLV Customers (Q4) — Prioritize for Retention</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>HSHD Num</th><th>Total Spend ($)</th><th>Transactions</th><th>Predicted CLV ($)</th><th>Loyalty</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge">991</span></td><td>$25,006</td><td>1,517</td><td>$10,446</td><td>Y</td><td style="color:var(--accent);">⭐ Premium</td></tr>
+      <tr><td><span class="badge">4857</span></td><td>$14,971</td><td>1,186</td><td>$7,094</td><td>Y</td><td style="color:var(--accent);">⭐ Premium</td></tr>
+      <tr><td><span class="badge">2375</span></td><td>$14,711</td><td>447</td><td>$7,048</td><td>N</td><td style="color:#3b82f6;">🔵 High</td></tr>
+      <tr><td><span class="badge">4078</span></td><td>$24,072</td><td>726</td><td>$6,117</td><td>Y</td><td style="color:#3b82f6;">🔵 High</td></tr>
+      <tr><td><span class="badge">1433</span></td><td>$21,395</td><td>566</td><td>$6,035</td><td>Y</td><td style="color:#3b82f6;">🔵 High</td></tr>
+    </tbody>
+  </table>
   </div>
 </div>
 
 <script>
-  const chartDefaults = {
-    plugins: { legend: { labels: { color: '#e2e8f0' } } },
-    scales: {
-      x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } },
-      y: { ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } }
-    }
-  };
+const cd = {
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { color: '#64748b', font:{size:10} }, grid: { color: '#1e2d40' } },
+    y: { ticks: { color: '#64748b', font:{size:10} }, grid: { color: '#1e2d40' } }
+  }
+};
 
-  // Feature importance - Random Forest
-  new Chart(document.getElementById('featureChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Department', 'Brand Type', 'Spend', 'Units'],
-      datasets: [{
-        label: 'Importance (%)',
-        data: [100, 0, 0, 0],
-        backgroundColor: ['#3b82f6','#00c896','#f59e0b','#ef4444'],
-        borderRadius: 4
-      }]
-    },
-    options: chartDefaults
-  });
+// Spend Trend
+new Chart(document.getElementById('spendTrendChart'), {
+  type: 'line',
+  data: {
+    labels: ['2018','2019','2020'],
+    datasets: [{
+      data: [653345.94, 1723518.65, 1149598.93],
+      borderColor: '#00c896', backgroundColor: 'rgba(0,200,150,0.1)',
+      fill: true, tension: 0.4, pointBackgroundColor: '#00c896', pointRadius: 5
+    }]
+  },
+  options: cd
+});
 
-  // Department basket frequency
-  new Chart(document.getElementById('basketDeptChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['FOOD', 'NON-FOOD', 'PHARMA'],
-      datasets: [{
-        data: [79722, 37678, 6917],
-        backgroundColor: ['#00c896','#3b82f6','#f59e0b'],
-        borderColor: '#111827',
-        borderWidth: 2
-      }]
-    },
-    options: { plugins: { legend: { labels: { color: '#e2e8f0' }, position: 'bottom' } } }
-  });
+// Dept Growth
+new Chart(document.getElementById('deptGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['PHARMA','FOOD','NON-FOOD'],
+    datasets: [{
+      data: [88.2, 76.5, 71.5],
+      backgroundColor: ['#f59e0b','#00c896','#3b82f6'], borderRadius: 4
+    }]
+  },
+  options: { ...cd, plugins: { legend:{display:false} } }
+});
 
-  // GB Feature importance
-  new Chart(document.getElementById('gbFeatureChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Last Week', 'Txn Count', 'Total Spend', 'Avg Spend', 'Avg Units', 'Loyalty'],
-      datasets: [{
-        label: 'Importance (%)',
-        data: [76.77, 11.24, 6.31, 5.19, 0.49, 0.0],
-        backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#00c896','#8b5cf6','#64748b'],
-        borderRadius: 4
-      }]
-    },
-    options: { ...chartDefaults, indexAxis: 'y' }
-  });
+// Loyalty Compare
+new Chart(document.getElementById('loyaltyCompareChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Non-Member','Loyalty'],
+    datasets: [{
+      label: 'Spend/HH ($)',
+      data: [4855, 10190],
+      backgroundColor: ['#1e2d40','#00c896'], borderRadius: 4
+    }]
+  },
+  options: cd
+});
 
-  // Churn by loyalty
-  new Chart(document.getElementById('churnLoyaltyChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Non-Member (N)', 'Loyalty Member (Y)'],
-      datasets: [
-        {
-          label: 'Active',
-          data: [98, 273],
-          backgroundColor: 'rgba(0,200,150,0.7)',
-          borderRadius: 4
-        },
-        {
-          label: 'Churned',
-          data: [5, 24],
-          backgroundColor: 'rgba(239,68,68,0.7)',
-          borderRadius: 4
-        }
-      ]
-    },
-    options: { ...chartDefaults, scales: { ...chartDefaults.scales, x: { stacked: false, ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } }, y: { stacked: false, ticks: { color: '#64748b' }, grid: { color: '#1e2d40' } } } }
-  });
+// Segments Donut
+new Chart(document.getElementById('segmentChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Loyal Mid (189)','Frequent Non-Loyal (99)','Champions (101)','Low-Freq (11)'],
+    datasets: [{
+      data: [189, 99, 101, 11],
+      backgroundColor: ['#00c896','#f59e0b','#3b82f6','#ef4444'],
+      borderColor: '#111827', borderWidth: 2
+    }]
+  },
+  options: { plugins: { legend: { labels: { color:'#64748b', font:{size:10} }, position:'bottom' } } }
+});
+
+// CLV Pie
+new Chart(document.getElementById('clvPieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Low (335)','Medium (52)','High (12)','Premium (1)'],
+    datasets: [{
+      data: [335, 52, 12, 1],
+      backgroundColor: ['#1e2d40','#f59e0b','#3b82f6','#00c896'],
+      borderColor: '#111827', borderWidth: 2
+    }]
+  },
+  options: { plugins: { legend: { labels: { color:'#64748b', font:{size:10} }, position:'bottom' } } }
+});
+
+// Frequency
+new Chart(document.getElementById('freqChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Non-Member','Loyalty Member'],
+    datasets: [{
+      data: [190, 222],
+      backgroundColor: ['#1e2d40','#3b82f6'], borderRadius: 4
+    }]
+  },
+  options: { ...cd, scales: { ...cd.scales, y: { ...cd.scales.y, min: 170 } } }
+});
+
+// Segment Spend
+new Chart(document.getElementById('segSpendChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Loyal Mid','Freq Non-Loyal','Champions','Low-Freq'],
+    datasets: [{
+      data: [6378, 4864, 17946, 2451],
+      backgroundColor: ['#00c896','#f59e0b','#3b82f6','#ef4444'], borderRadius: 4
+    }]
+  },
+  options: cd
+});
+
+// CLV Bar
+new Chart(document.getElementById('clvBarChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Low','Medium','High','Premium'],
+    datasets: [{
+      data: [1157, 3461, 5837, 10446],
+      backgroundColor: ['#1e2d40','#f59e0b','#3b82f6','#00c896'], borderRadius: 4
+    }]
+  },
+  options: cd
+});
+
+// Region
+new Chart(document.getElementById('regionChart'), {
+  type: 'bar',
+  data: {
+    labels: ['EAST','WEST','SOUTH','CENTRAL'],
+    datasets: [{
+      data: [1028122, 879393, 827323, 791624],
+      backgroundColor: ['#00c896','#3b82f6','#f59e0b','#8b5cf6'], borderRadius: 4
+    }]
+  },
+  options: cd
+});
 </script>
 {% endblock %}
