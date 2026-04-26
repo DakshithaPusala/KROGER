@@ -34,17 +34,17 @@
 <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">📈 Annual Spend Trend (Q1)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Annual Spend Trend (Q1 - Engagement Over Time)</div>
     <canvas id="spendTrendChart" height="160"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">📦 Dept Growth 2018→2020</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Department Growth 2018 to 2020</div>
     <canvas id="deptGrowthChart" height="160"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🏆 Loyalty vs Non-Loyalty (Q3)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Loyalty vs Non-Loyalty Spend (Q3)</div>
     <canvas id="loyaltyCompareChart" height="160"></canvas>
   </div>
 
@@ -54,37 +54,37 @@
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">👥 Customer Segments (Q2)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Customer Segments (Q2 - KMeans k=4)</div>
     <canvas id="segmentChart" height="180"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💰 CLV Segment Distribution (Q4)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">CLV Segment Distribution (Q4)</div>
     <canvas id="clvPieChart" height="180"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🔁 Purchase Frequency (Q3)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Purchase Frequency by Loyalty (Q3)</div>
     <canvas id="freqChart" height="180"></canvas>
   </div>
 
 </div>
 
-<!-- ROW 3: Segment Spend + CLV Bar + Spend by Region -->
+<!-- ROW 3: Segment Spend + CLV Bar + Region -->
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💵 Avg Spend by Segment (Q2)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Avg Spend by Customer Segment (Q2)</div>
     <canvas id="segSpendChart" height="180"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">⭐ Avg CLV by Tier (Q4)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Avg CLV by Tier (Q4)</div>
     <canvas id="clvBarChart" height="180"></canvas>
   </div>
 
   <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">🗺️ Spend by Region</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Spend by Region</div>
     <canvas id="regionChart" height="180"></canvas>
   </div>
 
@@ -92,15 +92,46 @@
 
 <!-- ROW 4: Segment Table -->
 <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;margin-bottom:1rem;">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">👥 Customer Segment Profiles (Q2) — KMeans Clustering (k=4)</div>
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Customer Segment Profiles (Q2) — KMeans Clustering</div>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Segment</th><th>Households</th><th>Avg Total Spend</th><th>Avg Transactions</th><th>Avg Basket ($)</th><th>Loyalty %</th><th>Profile</th><th>Strategy</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Segment</th>
+        <th>Households</th>
+        <th>Avg Total Spend</th>
+        <th>Avg Transactions</th>
+        <th>Avg Basket ($)</th>
+        <th>Loyalty %</th>
+        <th>Profile</th>
+        <th>Marketing Strategy</th>
+      </tr>
+    </thead>
     <tbody>
-      <tr><td><span class="badge">Seg 0</span></td><td>189</td><td>$6,378</td><td>135</td><td>$3.74</td><td>100%</td><td style="color:var(--accent);">💚 Loyal Mid-Spenders</td><td>Upsell to premium</td></tr>
-      <tr><td><span class="badge">Seg 1</span></td><td>99</td><td>$4,864</td><td>192</td><td>$3.61</td><td>0%</td><td style="color:#f59e0b;">🟡 Frequent Non-Loyal</td><td>Enroll in loyalty</td></tr>
-      <tr><td><span class="badge">Seg 2</span></td><td>101</td><td>$17,946</td><td>397</td><td>$4.04</td><td>100%</td><td style="color:#3b82f6;">💎 Champions</td><td>VIP rewards</td></tr>
-      <tr><td><span class="badge">Seg 3</span></td><td>11</td><td>$2,451</td><td>61</td><td>$9.49</td><td>64%</td><td style="color:#ef4444;">⚠️ Low-Freq</td><td>Re-engagement</td></tr>
+      <tr>
+        <td><span class="badge">Seg 0</span></td>
+        <td>189</td><td>$6,378</td><td>135</td><td>$3.74</td><td>100%</td>
+        <td style="color:var(--accent);">Loyal Mid-Spenders</td>
+        <td>Upsell to premium products</td>
+      </tr>
+      <tr>
+        <td><span class="badge">Seg 1</span></td>
+        <td>99</td><td>$4,864</td><td>192</td><td>$3.61</td><td>0%</td>
+        <td style="color:#f59e0b;">Frequent Non-Loyal</td>
+        <td>Enroll in loyalty program</td>
+      </tr>
+      <tr>
+        <td><span class="badge">Seg 2</span></td>
+        <td>101</td><td>$17,946</td><td>397</td><td>$4.04</td><td>100%</td>
+        <td style="color:#3b82f6;">High-Value Champions</td>
+        <td>VIP rewards, early access</td>
+      </tr>
+      <tr>
+        <td><span class="badge">Seg 3</span></td>
+        <td>11</td><td>$2,451</td><td>61</td><td>$9.49</td><td>64%</td>
+        <td style="color:#ef4444;">Low-Frequency Shoppers</td>
+        <td>Re-engagement campaigns</td>
+      </tr>
     </tbody>
   </table>
   </div>
@@ -108,16 +139,25 @@
 
 <!-- ROW 5: Top CLV Customers -->
 <div style="background:#111827;border:1px solid #1e2d40;border-radius:12px;padding:1.2rem;">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">💰 Top 5 Highest CLV Customers (Q4) — Prioritize for Retention</div>
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1rem;color:#e2e8f0;">Top 5 Highest CLV Customers (Q4) — Priority Retention Targets</div>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>HSHD Num</th><th>Total Spend ($)</th><th>Transactions</th><th>Predicted CLV ($)</th><th>Loyalty</th><th>Priority</th></tr></thead>
+    <thead>
+      <tr>
+        <th>HSHD Num</th>
+        <th>Total Spend ($)</th>
+        <th>Transactions</th>
+        <th>Predicted CLV ($)</th>
+        <th>Loyalty</th>
+        <th>Priority</th>
+      </tr>
+    </thead>
     <tbody>
-      <tr><td><span class="badge">991</span></td><td>$25,006</td><td>1,517</td><td>$10,446</td><td>Y</td><td style="color:var(--accent);">⭐ Premium</td></tr>
-      <tr><td><span class="badge">4857</span></td><td>$14,971</td><td>1,186</td><td>$7,094</td><td>Y</td><td style="color:var(--accent);">⭐ Premium</td></tr>
-      <tr><td><span class="badge">2375</span></td><td>$14,711</td><td>447</td><td>$7,048</td><td>N</td><td style="color:#3b82f6;">🔵 High</td></tr>
-      <tr><td><span class="badge">4078</span></td><td>$24,072</td><td>726</td><td>$6,117</td><td>Y</td><td style="color:#3b82f6;">🔵 High</td></tr>
-      <tr><td><span class="badge">1433</span></td><td>$21,395</td><td>566</td><td>$6,035</td><td>Y</td><td style="color:#3b82f6;">🔵 High</td></tr>
+      <tr><td><span class="badge">991</span></td><td>$25,006</td><td>1,517</td><td>$10,446</td><td>Y</td><td style="color:var(--accent);">Premium</td></tr>
+      <tr><td><span class="badge">4857</span></td><td>$14,971</td><td>1,186</td><td>$7,094</td><td>Y</td><td style="color:var(--accent);">Premium</td></tr>
+      <tr><td><span class="badge">2375</span></td><td>$14,711</td><td>447</td><td>$7,048</td><td>N</td><td style="color:#3b82f6;">High</td></tr>
+      <tr><td><span class="badge">4078</span></td><td>$24,072</td><td>726</td><td>$6,117</td><td>Y</td><td style="color:#3b82f6;">High</td></tr>
+      <tr><td><span class="badge">1433</span></td><td>$21,395</td><td>566</td><td>$6,035</td><td>Y</td><td style="color:#3b82f6;">High</td></tr>
     </tbody>
   </table>
   </div>
@@ -132,7 +172,6 @@ const cd = {
   }
 };
 
-// Spend Trend
 new Chart(document.getElementById('spendTrendChart'), {
   type: 'line',
   data: {
@@ -146,34 +185,24 @@ new Chart(document.getElementById('spendTrendChart'), {
   options: cd
 });
 
-// Dept Growth
 new Chart(document.getElementById('deptGrowthChart'), {
   type: 'bar',
   data: {
     labels: ['PHARMA','FOOD','NON-FOOD'],
-    datasets: [{
-      data: [88.2, 76.5, 71.5],
-      backgroundColor: ['#f59e0b','#00c896','#3b82f6'], borderRadius: 4
-    }]
-  },
-  options: { ...cd, plugins: { legend:{display:false} } }
-});
-
-// Loyalty Compare
-new Chart(document.getElementById('loyaltyCompareChart'), {
-  type: 'bar',
-  data: {
-    labels: ['Non-Member','Loyalty'],
-    datasets: [{
-      label: 'Spend/HH ($)',
-      data: [4855, 10190],
-      backgroundColor: ['#1e2d40','#00c896'], borderRadius: 4
-    }]
+    datasets: [{ data: [88.2, 76.5, 71.5], backgroundColor: ['#f59e0b','#00c896','#3b82f6'], borderRadius: 4 }]
   },
   options: cd
 });
 
-// Segments Donut
+new Chart(document.getElementById('loyaltyCompareChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Non-Member','Loyalty Member'],
+    datasets: [{ data: [4855, 10190], backgroundColor: ['#1e2d40','#00c896'], borderRadius: 4 }]
+  },
+  options: cd
+});
+
 new Chart(document.getElementById('segmentChart'), {
   type: 'doughnut',
   data: {
@@ -187,7 +216,6 @@ new Chart(document.getElementById('segmentChart'), {
   options: { plugins: { legend: { labels: { color:'#64748b', font:{size:10} }, position:'bottom' } } }
 });
 
-// CLV Pie
 new Chart(document.getElementById('clvPieChart'), {
   type: 'doughnut',
   data: {
@@ -201,54 +229,38 @@ new Chart(document.getElementById('clvPieChart'), {
   options: { plugins: { legend: { labels: { color:'#64748b', font:{size:10} }, position:'bottom' } } }
 });
 
-// Frequency
 new Chart(document.getElementById('freqChart'), {
   type: 'bar',
   data: {
     labels: ['Non-Member','Loyalty Member'],
-    datasets: [{
-      data: [190, 222],
-      backgroundColor: ['#1e2d40','#3b82f6'], borderRadius: 4
-    }]
+    datasets: [{ data: [190, 222], backgroundColor: ['#1e2d40','#3b82f6'], borderRadius: 4 }]
   },
   options: { ...cd, scales: { ...cd.scales, y: { ...cd.scales.y, min: 170 } } }
 });
 
-// Segment Spend
 new Chart(document.getElementById('segSpendChart'), {
   type: 'bar',
   data: {
     labels: ['Loyal Mid','Freq Non-Loyal','Champions','Low-Freq'],
-    datasets: [{
-      data: [6378, 4864, 17946, 2451],
-      backgroundColor: ['#00c896','#f59e0b','#3b82f6','#ef4444'], borderRadius: 4
-    }]
+    datasets: [{ data: [6378, 4864, 17946, 2451], backgroundColor: ['#00c896','#f59e0b','#3b82f6','#ef4444'], borderRadius: 4 }]
   },
   options: cd
 });
 
-// CLV Bar
 new Chart(document.getElementById('clvBarChart'), {
   type: 'bar',
   data: {
     labels: ['Low','Medium','High','Premium'],
-    datasets: [{
-      data: [1157, 3461, 5837, 10446],
-      backgroundColor: ['#1e2d40','#f59e0b','#3b82f6','#00c896'], borderRadius: 4
-    }]
+    datasets: [{ data: [1157, 3461, 5837, 10446], backgroundColor: ['#1e2d40','#f59e0b','#3b82f6','#00c896'], borderRadius: 4 }]
   },
   options: cd
 });
 
-// Region
 new Chart(document.getElementById('regionChart'), {
   type: 'bar',
   data: {
     labels: ['EAST','WEST','SOUTH','CENTRAL'],
-    datasets: [{
-      data: [1028122, 879393, 827323, 791624],
-      backgroundColor: ['#00c896','#3b82f6','#f59e0b','#8b5cf6'], borderRadius: 4
-    }]
+    datasets: [{ data: [1028122, 879393, 827323, 791624], backgroundColor: ['#00c896','#3b82f6','#f59e0b','#8b5cf6'], borderRadius: 4 }]
   },
   options: cd
 });
